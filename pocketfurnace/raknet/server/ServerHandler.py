@@ -40,7 +40,7 @@ class ServerHandler:
         self.server.push_main_to_thread_packet(buffer)
 
     def send_option(self, name: str, value: str):
-        buffer = b""
+        buffer = ""
         buffer += chr(PyRakLib.PACKET_SET_OPTION)
         buffer += chr(len(name))
         buffer += name

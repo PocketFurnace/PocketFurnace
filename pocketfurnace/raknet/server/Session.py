@@ -84,7 +84,7 @@ class Session:
 
     send_seq_number = 0
     last_update = None
-    disconnection_time = None
+    disconnection_time = 0
     __is_temporal = True
     packet_to_send = []
     is_active = False
@@ -158,7 +158,6 @@ class Session:
         if not self.is_active and self.last_update + 10 < time:
             self.disconnect("timeout")
             return
-
         if self.state == self.STATE_DISCONNECTING and (len(self.__send_queue.packets) == 0) and (len(self.ack_queue) == 0) and (len(self.nack_queue) == 0) and (len(self.packet_to_send) == 0) and (len(self.recovery_queue) == 0) or self.disconnection_time + 10 < time:
             self.close()
             return

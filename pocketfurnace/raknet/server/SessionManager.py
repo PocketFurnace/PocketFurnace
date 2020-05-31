@@ -93,11 +93,11 @@ class SessionManager:
         while not self.shutdown:
             start = microtime(True)
             stream = True
-            for ix in range(0, 100) and stream and not self.shutdown:
+            for ix in range(0, 100):
                 ix += 1
                 stream = self.receive_stream()
             socket = True
-            for iy in range(0, 100) and socket and not self.shutdown:
+            for iy in range(0, 100):
                 iy += 1
                 socket = self.receive_packet()
             self.tick()
@@ -265,23 +265,23 @@ class SessionManager:
 
     def receive_stream(self):
         packet = self.server.read_main_to_thread_packet()
-        if packet is not None:
-            identifier = packet[0]
+        if packet is not None and len(packet) > 0:
+            packet_id = ord(packet[0])
             offset = 1
-            if identifier == PyRakLib.PACKET_ENCAPSULATED:
+            if packet_id == PyRakLib.PACKET_ENCAPSULATED:
                 offset += 1
                 length = packet[offset]
-                identifier = packet[offset:length]
+                packet_id = packet[offset:length]
                 offset += length
-                session = self.sessions[identifier] or None
+                session = self.sessions[packet_id] or None
                 if session is not None and session.is_connected():
                     offset += 1
                     flags = packet[offset]
                     buffer = packet[offset:]
                     session.add_encapsulated_to_queue(EncapsulatedPacket.from_internal_binary(buffer), flags)
                 else:
-                    self.stream_invalid(identifier)
-            elif identifier == PyRakLib.PACKET_RAW:
+                    self.stream_invalid(packet_id)
+            elif packet_id == PyRakLib.PACKET_RAW:
                 length = packet[offset]
                 address = packet[offset:length]
                 offset += length
@@ -289,24 +289,24 @@ class SessionManager:
                 offset += 2
                 payload = packet[offset:]
                 self.socket.write_packet(payload, address, port)
-            elif identifier == PyRakLib.PACKET_CLOSE_SESSION:
+            elif packet_id == PyRakLib.PACKET_CLOSE_SESSION:
                 offset += 1
                 length = packet[offset]
-                identifier = packet[offset:length]
-                if identifier in self.sessions:
-                    self.sessions[identifier].flag_for_disconnection()
+                packet_id = packet[offset:length]
+                if packet_id in self.sessions:
+                    self.sessions[packet_id].flag_for_disconnection()
                 else:
-                    self.stream_invalid(identifier)
-            elif identifier == PyRakLib.PACKET_INVALID_SESSION:
+                    self.stream_invalid(packet_id)
+            elif packet_id == PyRakLib.PACKET_INVALID_SESSION:
                 offset += 1
                 length = packet[offset]
-                identifier = packet[offset:length]
-                if identifier in self.sessions:
-                    self.remove_session(self.sessions[identifier])
-            elif identifier == PyRakLib.PACKET_SET_OPTION:
+                packet_id = packet[offset:length]
+                if packet_id in self.sessions:
+                    self.remove_session(self.sessions[packet_id])
+            elif packet_id == PyRakLib.PACKET_SET_OPTION:
+                length = ord(packet[offset])
                 offset += 1
-                length = packet[offset]
-                name = packet[offset:length]
+                name = packet[offset:offset + length]
                 offset += length
                 value = packet[offset:]
                 if name == "name":
@@ -318,27 +318,27 @@ class SessionManager:
                 else:
                     pass
                     # self.server.logger.error("Invalid option: "+name+" "+value)
-            elif identifier == PyRakLib.PACKET_BLOCK_ADDRESS:
+            elif packet_id == PyRakLib.PACKET_BLOCK_ADDRESS:
                 offset += 1
                 length = packet[offset]
                 address = packet[offset:length]
                 offset += length
                 timeout = Binary.read_int(packet[offset:4])
                 self.block_address(address, timeout)
-            elif identifier == PyRakLib.PACKET_UNBLOCK_ADDRESS:
+            elif packet_id == PyRakLib.PACKET_UNBLOCK_ADDRESS:
                 offset += 1
                 length = packet[offset]
                 address = packet[offset:length]
                 self.unblock_address(address)
-            elif identifier == PyRakLib.PACKET_SHUTDOWN:
+            elif packet_id == PyRakLib.PACKET_SHUTDOWN:
                 for session in self.sessions:
                     self.remove_session(session)
                 self.socket.close()
                 self.shutdown = True
-            elif identifier == PyRakLib.PACKET_EMERGENCY_SHUTDOWN:
+            elif packet_id == PyRakLib.PACKET_EMERGENCY_SHUTDOWN:
                 self.shutdown = True
             else:
-                print("Unknown raklib internal packet " + str(identifier))
+                print("Unknown raklib internal packet " + str(packet_id))
             return True
         return False
 

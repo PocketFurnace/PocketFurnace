@@ -58,7 +58,7 @@ class Binary:
         return struct.unpack(">h", string)[0]
 
     @staticmethod
-    def read_signed_short(s: str):
+    def read_signed_short(s: bytes):
         return Binary.sign_short(Binary.read_short(s))
 
     @staticmethod

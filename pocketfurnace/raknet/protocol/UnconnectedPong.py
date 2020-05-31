@@ -1,6 +1,5 @@
 from pocketfurnace.raknet.protocol.MessageIdentifiers import MessageIdentifiers
 from pocketfurnace.raknet.protocol.OfflineMessage import OfflineMessage
-from pprint import pprint
 
 
 class UnconnectedPong(OfflineMessage):
