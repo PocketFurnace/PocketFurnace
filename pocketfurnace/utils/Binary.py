@@ -1,37 +1,49 @@
+import re
 import struct
 import sys
-import re
-from pprint import pprint
 
-# ENDIANNESS = Binary.BIG_ENDIAN if struct.pack("d", 1) == "\77\360\0\0\0\0\0\0" else Binary.LITTLE_ENDIAN
+ENDIANNESS = 0x00 if struct.pack("b", 1) == b"\x01" else 0x01
+
 
 class Binary:
     BIG_ENDIAN = 0x00
     LITTLE_ENDIAN = 0x01
 
     @staticmethod
-    def sign_byte(value: int):
+    def sign_byte(value: int) -> int:
         return int(value) << 56 >> 56
 
     @staticmethod
-    def unsign_byte(value: int):
+    def unsign_byte(value: int) -> int:
         return int(value) & 0xff
 
     @staticmethod
-    def sign_short(value: int):
+    def sign_short(value: int) -> int:
         return int(value) << 48 >> 48
 
     @staticmethod
-    def unsign_short(value: int):
+    def unsign_short(value: int) -> int:
         return int(value) & 0xffff
 
     @staticmethod
-    def sign_int(value: int):
+    def sign_int(value: int) -> int:
         return int(value) << 32 >> 32
 
     @staticmethod
-    def unsign_int(value: int):
+    def unsign_int(value: int) -> int:
         return int(value) & 0xffffffff
+
+    @staticmethod
+    def flip_short_endianness(i: int) -> int:
+        return Binary.read_l_short(Binary.write_short(i))
+
+    @staticmethod
+    def flip_int_endianness(i) -> int:
+        return Binary.read_l_int(Binary.write_int(i))
+
+    @staticmethod
+    def flip_long_endianness(i) -> int:
+        return Binary.read_l_long(Binary.write_long(i))
 
     @staticmethod
     def read_bool(b: bytes) -> bool:
@@ -55,8 +67,6 @@ class Binary:
 
     @staticmethod
     def read_short(string: bytes) -> int:
-        print("ENTRADA DE SHORT:")
-        pprint(string)
         return struct.unpack(">h", string)[0]
 
     @staticmethod
@@ -253,15 +263,3 @@ class Binary:
     @staticmethod
     def write_var_long(i):
         return Binary.write_unsigned_var_long((i << 1) ^ (i >> 63))
-
-    @staticmethod
-    def flip_short_endianness(i):
-        return Binary.read_l_short(Binary.write_short(i))
-
-    @staticmethod
-    def flip_int_endianness(i):
-        return Binary.read_l_int(Binary.write_int(i))
-
-    @staticmethod
-    def flip_long_endianness(i):
-        return Binary.read_l_long(Binary.write_long(i))
