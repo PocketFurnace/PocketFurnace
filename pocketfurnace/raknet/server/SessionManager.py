@@ -2,7 +2,7 @@ import copy
 import json
 import math
 import time
-
+from pprint import pprint
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol.ACK import ACK
 from pocketfurnace.raknet.protocol.AdvertiseSystem import AdvertiseSystem
@@ -138,14 +138,12 @@ class SessionManager:
         self.ticks += 1
 
     def receive_packet(self) -> bool:
-        address = self.reusable_address
         length = self.socket.read_packet()
         if length is None:
             return False
-        else:
-            buffer = length
-        data = len(length)
-        self.receive_bytes += data
+        address = self.reusable_address
+        packet_length = len(length)
+        self.receive_bytes += packet_length
         if address.get_ip() in self.block:
             return True
         if address.ip in self.ip_sec:
@@ -155,36 +153,50 @@ class SessionManager:
                 return True
         else:
             self.ip_sec[address.ip] = 1
-        if data < 1:
+        if packet_length < 1:
             return True
-        pid = buffer[0][0]
-        session = self.get_session(address)
-        if session is not None:
-            if (pid & Datagram.BITFLAG_VALID) != 0:
-                if (pid & Datagram.BITFLAG_ACK) != 0:
-                    session.handle_packet(ACK(buffer))
-                elif (pid & Datagram.BITFLAG_NACK) != 0:
-                    session.handle_packet(NACK(buffer))
+        buffer = length[0]
+        try:
+            pid = buffer[0]
+            session = self.get_session(address)
+            if session is not None:
+                if (pid & Datagram.BITFLAG_VALID) != 0:
+                    if (pid & Datagram.BITFLAG_ACK) != 0:
+                        session.handle_packet(ACK(buffer))
+                    elif (pid & Datagram.BITFLAG_NACK) != 0:
+                        session.handle_packet(NACK(buffer))
+                    else:
+                        session.handle_packet(Datagram(buffer))
                 else:
-                    session.handle_packet(Datagram(buffer))
-            else:
-                print("ignored packet due to session already oppened")
-                pass
-        elif isinstance(self.get_packet_from_pool(pid, buffer), OfflineMessage):
-            pk = self.get_packet_from_pool(pid, buffer)
-            try:
+                    print("ignored packet due to session already oppened")
+                    pass
+            elif isinstance(self.get_packet_from_pool(pid, buffer), OfflineMessage):
+                pk = self.get_packet_from_pool(pid, buffer)
                 if isinstance(pk, OfflineMessage):
-                    if not pk.is_valid():
-                        raise ValueError("Packet magic is invalid")
-            except Exception:
-                print("received garbage message")
-                self.block_address(address.ip, 5)
-            if not self.offline_message_handler.handle(pk, address):
-                print("Unhandled unconnected packet")
-        elif (pid & Datagram.BITFLAG_VALID) != 0 and (pid & 0x03) == 0:
-            print("Ignored connected packet due to no session opened")
-        else:
-            self.stream_raw(address, buffer)
+                    pointer = True
+                    while pointer:
+                        try:
+                            pk.decode()
+                            print("MAGIC FROM PK")
+                            pprint(pk._magic)
+                            if not pk.is_valid():
+                                raise ValueError("Packet magic is invalid")
+                        except Exception as e:
+                            print(e.__str__())
+                            print("received garbage message")
+                            self.block_address(address.ip, 5)
+                            raise e
+                        pointer = False
+                if not self.offline_message_handler.handle(pk, address):
+                    print("Unhandled unconnected packet")
+            elif (pid & Datagram.BITFLAG_VALID) != 0 and (pid & 0x03) == 0:
+                print("Ignored connected packet due to no session opened")
+            else:
+                self.stream_raw(address, buffer)
+        except Exception as e:
+            print("Packet from address ", length[1][0])
+            print(e.__str__())
+            raise e
         return True
 
     def send_packet(self, packet: Packet, address: InternetAddress):
@@ -247,12 +259,12 @@ class SessionManager:
         self.server.push_thread_to_main_packet(buffer)
 
     def stream_option(self, name, value):
-        buffer = b""
+        buffer = ""
         buffer += chr(PyRakLib.PACKET_SET_OPTION)
         buffer += chr(len(name))
         buffer += name
         buffer += value
-        self.server.push_thread_to_main_packet(buffer)
+        self.server.push_thread_to_main_packet(buffer.encode("UTF-8"))
 
     def stream_ping_measure(self, session: Session, ping_ms: int):
         identifier = session.get_address().to_string()
@@ -362,8 +374,7 @@ class SessionManager:
         try:
             return self.sessions[address.to_string()]
         except (KeyError, IndexError, NameError):
-            self.sessions[address.to_string()] = Session(self, address, self.get_id(), self.get_max_mtu_size())
-            return self.sessions[address.to_string()]
+            return None
 
     def session_exists(self, address: InternetAddress):
         return address.to_string() in self.sessions

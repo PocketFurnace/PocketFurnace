@@ -80,7 +80,7 @@ class EncapsulatedPacket:
 
     def to_binary(self):
         buffer = b""
-        buffer += (self.reliability << self.RELIABILITY_SHIFT) | (self.SPLIT_FLAG if self.has_split else 0)
+        buffer += chr((self.reliability << self.RELIABILITY_SHIFT) | (self.SPLIT_FLAG if self.has_split else 0)).encode("UTF-8")
         buffer += Binary.write_short(len(self.buffer) << 3)
         buffer += Binary.write_l_triad(self.message_index) if PacketReliability.is_reliable(self.reliability) else b""
         buffer += Binary.write_l_triad(self.sequence_index) if PacketReliability.is_sequenced(self.reliability) else b""

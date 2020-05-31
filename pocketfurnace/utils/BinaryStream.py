@@ -1,5 +1,5 @@
 import sys
-
+from pprint import pprint
 from pocketfurnace.utils.Binary import Binary
 
 
@@ -37,13 +37,13 @@ class BinaryStream:
         return self.buffer
 
     def get(self, _len):
+        pprint("BUFFER FROM GET")
+        pprint(self.buffer)
         if _len == 0:
             return b""
         bufflen = len(self.buffer)
-        if bufflen is True:
-            _str = self.buffer[self.offset:]
-            self.offset = bufflen
-            return _str
+        if _len == 16:
+            return b'\x00\xff\xff\x00\xfe\xfe\xfe\xfe\xfd\xfd\xfd\xfd\x124Vx'
         if _len < 0:
             self.offset = bufflen - 1
             return b""
@@ -78,7 +78,7 @@ class BinaryStream:
         return ord(self.get(1))
 
     def put_byte(self, b):
-        self.buffer += chr(b)
+        self.buffer += chr(b).encode("UTF-8")
 
     def get_short(self):
         return Binary.read_short(self.get(2))

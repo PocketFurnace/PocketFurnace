@@ -2,6 +2,7 @@ from pocketfurnace.utils.Binary import Binary
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol import EncapsulatedPacket
 from pocketfurnace.raknet.server import PyRakLibServer, ServerInstance
+from pprint import pprint
 
 
 class ServerHandler:

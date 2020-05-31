@@ -37,13 +37,13 @@ class UDPServerSocket:
     def read_packet(self):
         try:
             data = self.socket.recvfrom(65535)
-            print("Packet IN: "+str(data))
+            # print("Packet IN: "+str(data))
             return data
         except socket.error:
             pass
 
     def write_packet(self, buffer, dest, port):
-        print("Packet OUT: "+str(buffer))
+        # print("Packet OUT: "+str(buffer))
         return self.socket.sendto(buffer, (dest, port))
 
     def set_send_buffer(self, size: int):

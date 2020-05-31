@@ -1,7 +1,7 @@
 import struct
 import sys
 import re
-
+from pprint import pprint
 
 # ENDIANNESS = Binary.BIG_ENDIAN if struct.pack("d", 1) == "\77\360\0\0\0\0\0\0" else Binary.LITTLE_ENDIAN
 
@@ -55,6 +55,8 @@ class Binary:
 
     @staticmethod
     def read_short(string: bytes) -> int:
+        print("ENTRADA DE SHORT:")
+        pprint(string)
         return struct.unpack(">h", string)[0]
 
     @staticmethod
@@ -103,7 +105,7 @@ class Binary:
 
     @staticmethod
     def read_l_int(s: bytes) -> int:
-        return struct.unpack("<i", s)[0]
+        return struct.unpack("V", s)[1]
 
     @staticmethod
     def write_l_int(i: int) -> bytes:
@@ -155,11 +157,11 @@ class Binary:
 
     @staticmethod
     def read_long(s: bytes) -> int:
-        return struct.unpack(">l", s)[0]
+        return struct.unpack("l", s)[0]
 
     @staticmethod
     def write_long(i: int) -> bytes:
-        return struct.pack(">l", i)
+        return struct.pack("q", i)
 
     @staticmethod
     def read_l_long(s: bytes) -> int:

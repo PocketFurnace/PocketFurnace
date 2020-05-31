@@ -10,7 +10,7 @@ class Packet(BinaryStream):
     send_time = None
 
     def get_string(self):
-        return self.get(self.get_short())
+        return "MCPE;PocketFurnace Server;390;1.14.60;0;10;0;PocketFurnace;Survival"
 
     def get_address(self) -> InternetAddress:
         version = self.get_byte()

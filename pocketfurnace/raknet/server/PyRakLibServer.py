@@ -6,6 +6,7 @@ import queue
 import random
 import sys
 from threading import Thread
+from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.server.SessionManager import SessionManager
@@ -88,9 +89,11 @@ class PyRakLibServer(Thread):
 
     def __str__(self):
         print("INTERNAL QUEUE:")
-        print(self.internal_queue.get())
+        while not self.internal_queue.empty():
+            pprint(self.internal_queue.get())
         print("EXTERNAL QUEUE:")
-        print(self.external_queue.get())
+        while not self.external_queue.empty():
+            pprint(self.external_queue.get())
         return "(PyRakLibServer)" + \
                "ADDRESS: " + self.address.__str__() + \
                "SERVER_ID: " + str(self.server_id) + \

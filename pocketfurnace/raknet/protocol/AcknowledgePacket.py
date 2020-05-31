@@ -60,7 +60,6 @@ class AcknowledgePacket(Packet):
         self.buffer += payload
 
     def _decodePayload(self) -> None:
-        self.get()
         count = self.get_short()
         self.packets = []
         cnt = 0
