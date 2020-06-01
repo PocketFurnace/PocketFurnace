@@ -2,6 +2,8 @@ import re
 import struct
 import sys
 
+from pocketfurnace.utils.BinaryStream import BinaryDataException
+
 ENDIANNESS = 0x00 if struct.pack("b", 1) == b"\x01" else 0x01
 
 
@@ -11,62 +13,73 @@ class Binary:
 
     @staticmethod
     def sign_byte(value: int) -> int:
+        # WORKS 
         return int(value) << 56 >> 56
 
     @staticmethod
     def unsign_byte(value: int) -> int:
+        # WORKS 
         return int(value) & 0xff
 
     @staticmethod
     def sign_short(value: int) -> int:
+        # WORKS 
         return int(value) << 48 >> 48
 
     @staticmethod
     def unsign_short(value: int) -> int:
+        # WORKS 
         return int(value) & 0xffff
 
     @staticmethod
     def sign_int(value: int) -> int:
+        # WORKS 
         return int(value) << 32 >> 32
 
     @staticmethod
     def unsign_int(value: int) -> int:
+        # WORKS 
         return int(value) & 0xffffffff
 
     @staticmethod
-    def flip_short_endianness(i: int) -> int:
-        return Binary.read_l_short(Binary.write_short(i))
+    def flip_short_endianness(value: int) -> int:
+        return Binary.read_l_short(Binary.write_short(value))
 
     @staticmethod
-    def flip_int_endianness(i) -> int:
-        return Binary.read_l_int(Binary.write_int(i))
+    def flip_int_endianness(value) -> int:
+        return Binary.read_l_int(Binary.write_int(value))
 
     @staticmethod
-    def flip_long_endianness(i) -> int:
-        return Binary.read_l_long(Binary.write_long(i))
+    def flip_long_endianness(value) -> int:
+        return Binary.read_l_long(Binary.write_long(value))
 
     @staticmethod
-    def read_bool(b: bytes) -> bool:
-        return struct.unpack("?", b)[0]
+    def read_bool(value: bytes) -> bool:
+        # WORKS 
+        return struct.unpack("?", value)[0]
 
     @staticmethod
-    def write_bool(b: bool) -> bytes:
-        return b"\x01" if b else b"\x00"
+    def write_bool(value: bool) -> bytes:
+        # WORKS 
+        return b"\x01" if value else b"\x00"
 
     @staticmethod
-    def read_byte(s: bytes) -> int:
-        return ord(s)
+    def read_byte(value: bytes) -> int:
+        # WORKS 
+        return ord(value)
 
     @staticmethod
-    def read_signed_byte(s: str):
+    def read_signed_byte(s: bytes):
         return Binary.sign_byte(Binary.read_byte(s))
 
     @staticmethod
-    def write_byte(i: int) -> bytes:
-        return chr(i).encode()
+    def write_byte(value: int) -> bytes:
+        # WORKS
+        return chr(value).encode(encoding="UTF-8")
 
     @staticmethod
     def read_short(string: bytes) -> int:
+        # WORKS
         return struct.unpack(">h", string)[0]
 
     @staticmethod
@@ -74,133 +87,154 @@ class Binary:
         return Binary.sign_short(Binary.read_short(s))
 
     @staticmethod
-    def write_short(i: int) -> bytes:
-        return struct.pack(">h", i)
+    def write_short(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">H", value)
 
     @staticmethod
-    def read_l_short(string: bytes) -> int:
-        return struct.unpack("<h", string)[0]
+    def read_l_short(value: bytes) -> int:
+        # WORKS
+        return struct.unpack("<h", value)[0]
 
     @staticmethod
-    def read_signed_l_short(s):
-        return Binary.sign_short(Binary.read_short(s))
+    def read_signed_l_short(value):
+        return Binary.sign_short(Binary.read_short(value))
 
     @staticmethod
-    def write_l_short(i: int) -> bytes:
-        return struct.pack("<h", i)
+    def write_l_short(value: int) -> bytes:
+        # WORKS
+        return struct.pack("<h", value)
 
     @staticmethod
-    def read_triad(s: bytes) -> int:
-        return struct.unpack(">l", b"".join([b"\x00", s[0], s[1], s[2]]))[0]
+    def read_triad(value: bytes) -> int:
+        # WORKS
+        return struct.unpack(">l", b"\x00" + value)[0]
 
     @staticmethod
-    def write_triad(i: int) -> bytes:
-        return struct.pack(">l", i)[1:]
+    def write_triad(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">l", value)[1:]
 
     @staticmethod
-    def read_l_triad(s: bytes) -> int:
-        return struct.unpack("<l", b"".join([s[0], s[1], s[2], b"\x00"]))[0]
+    def read_l_triad(value: bytes) -> int:
+        # WORKS 
+        return struct.unpack("<i", value + b"\x00")[0]
 
     @staticmethod
-    def write_l_triad(i: int) -> bytes:
-        return struct.pack("<l", i)[0:-1]
+    def write_l_triad(value: int) -> bytes:
+        # WORKS
+        return struct.pack("<l", value)[0:-1]
 
     @staticmethod
-    def read_int(s: bytes) -> int:
-        return struct.unpack(">i", s)[0]
+    def read_int(value: bytes) -> int:
+        # WORKS
+        return struct.unpack(">i", value)[0]
 
     @staticmethod
-    def write_int(i: int) -> bytes:
-        return struct.pack(">i", i)
+    def write_int(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">i", value)
 
     @staticmethod
-    def read_l_int(s: bytes) -> int:
-        return struct.unpack("V", s)[1]
+    def read_l_int(value: bytes) -> int:
+        # WORKS
+        return struct.unpack("<L", value)[0]
 
     @staticmethod
-    def write_l_int(i: int) -> bytes:
-        return struct.pack("<i", i)
+    def write_l_int(value: int) -> bytes:
+        # WORKS
+        return struct.pack("<i", value)
 
     @staticmethod
-    def read_float(s: bytes) -> int:
-        return struct.unpack(">f", s)[0]
+    def read_float(value: bytes) -> int:
+        # WORKS
+        return struct.unpack(">f", value)[0]
 
     @staticmethod
     def read_rounded_float(s, accuracy):
+        # WORKS
         return round(Binary.read_float(s), accuracy)
 
     @staticmethod
-    def write_float(f: int) -> bytes:
-        return struct.pack(">f", f)
+    def write_float(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">f", value)
 
     @staticmethod
-    def read_l_float(s: bytes) -> int:
-        return struct.unpack("<f", s)[0]
+    def read_l_float(value: bytes) -> int:
+        # WORKS
+        return struct.unpack("<f", value)[0]
 
     @staticmethod
-    def read_rounded_l_float(s, accuracy):
-        return round(Binary.read_l_float(s), accuracy)
+    def read_rounded_l_float(value, accuracy):
+        # WORKS
+        return round(Binary.read_l_float(value), accuracy)
 
     @staticmethod
-    def write_l_float(f: int) -> bytes:
-        return struct.pack("<f", f)
+    def write_l_float(value: int) -> bytes:
+        # WORKS
+        return struct.pack("<f", value)
 
     @staticmethod
-    def print_float(f):
-        return re.match(r"/(\\.\\d+?)0+$/", "" + f).group(1)
+    def print_float(value: float):
+        # WORKS
+        return re.sub(r"/(\\.\\d+?)0+/", "$1", str(value))
 
     @staticmethod
-    def read_double(s: bytes) -> int:
-        return struct.unpack(">d", s)[0]
+    def read_double(value: bytes) -> int:
+        # WORKS
+        return struct.unpack(">d", value)[0]
 
     @staticmethod
-    def write_double(f: int) -> bytes:
-        return struct.pack(">d", f)
+    def write_double(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">d", value)
 
     @staticmethod
-    def read_l_double(s: bytes) -> int:
-        return struct.unpack("<d", s)[0]
+    def read_l_double(value: bytes) -> int:
+        # WORKS
+        return struct.unpack("<d", value)[0]
 
     @staticmethod
-    def write_l_double(f: int) -> bytes:
-        return struct.pack("<d", f)
+    def write_l_double(value: int) -> bytes:
+        # WORKS
+        return struct.pack("<d", value)
 
     @staticmethod
-    def read_long(s: bytes) -> int:
-        return struct.unpack("l", s)[0]
+    def read_long(value: bytes) -> int:
+        # WORKS
+        return struct.unpack(">q", value)[0]
 
     @staticmethod
-    def write_long(i: int) -> bytes:
-        return struct.pack("q", i)
+    def write_long(value: int) -> bytes:
+        # WORKS
+        return struct.pack(">q", value)
 
     @staticmethod
-    def read_l_long(s: bytes) -> int:
-        return struct.unpack("<l", s)[0]
+    def read_l_long(value: bytes) -> int:
+        # WORKS
+        return struct.unpack("l", value)[0]
 
     @staticmethod
     def write_l_long(i: int) -> bytes:
-        return struct.pack(">l", i)
+        # WORKS
+        return struct.pack("l", i)
 
     @staticmethod
-    def read_unsigned_var_int(buffer, offset):
-        v = 0
-        i = 0
-        while i <= 35:
-            i += 7
-            b = ord(buffer[offset.backIncrement()])
-            v |= ((b & 0x7f) << i)
-
-            if (b & 0x80) == 0:
-                return v
-            elif (len(buffer) - 1) < int(offset):
-                raise TypeError("Expected more bytes, none left to read")
-        raise TypeError("VarInt did not terminate after 5 bytes")
-
-    @staticmethod
-    def read_var_int(buffer, offset):
+    # WORKS
+    def read_var_int(buffer: bytes, offset: int = 0):
         raw = Binary.read_unsigned_var_int(buffer, offset)
-        temp = (((raw << 63) >> 63) ^ raw) >> 1
-        return temp ^ (raw & (1 << 63))
+        temp = (((raw >> 63) >> 63) ^ raw) >> 1
+        return temp ^ (raw & (1 >> 63))
+
+    @staticmethod
+    def read_unsigned_var_int(buffer: bytes, offset: int = 0):
+        # WORKS
+        if len(buffer) <= 0:
+            raise BinaryDataException("Expected more bytes, none left to read")
+        if offset > len(buffer):
+            raise BinaryDataException("VarInt did not terminate after 5 bytes!")
+        return buffer[offset]
 
     @staticmethod
     def write_unsigned_var_int(i):
