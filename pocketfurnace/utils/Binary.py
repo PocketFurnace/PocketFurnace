@@ -146,14 +146,14 @@ class Binary:
         return struct.pack("<i", value)
 
     @staticmethod
-    def read_float(value: bytes) -> int:
+    def read_float(value: bytes) -> float:
         # WORKS
         return struct.unpack(">f", value)[0]
 
     @staticmethod
-    def read_rounded_float(s, accuracy):
+    def read_rounded_float(value: str, accuracy: int) -> float:
         # WORKS
-        return round(Binary.read_float(s), accuracy)
+        return round(Binary.read_float(value.encode("UTF-8")), accuracy)
 
     @staticmethod
     def write_float(value: int) -> bytes:
@@ -166,9 +166,9 @@ class Binary:
         return struct.unpack("<f", value)[0]
 
     @staticmethod
-    def read_rounded_l_float(value, accuracy):
+    def read_rounded_l_float(value: str, accuracy: int) -> float:
         # WORKS
-        return round(Binary.read_l_float(value), accuracy)
+        return round(Binary.read_l_float(value.encode("UTF-8")), accuracy)
 
     @staticmethod
     def write_l_float(value: int) -> bytes:
@@ -176,9 +176,9 @@ class Binary:
         return struct.pack("<f", value)
 
     @staticmethod
-    def print_float(value: float):
+    def print_float(value: float) -> bytes:
         # WORKS
-        return re.sub(r"/(\\.\\d+?)0+/", "$1", str(value))
+        return re.sub(r"/(\\.\\d+?)0+/", "$1", str(value)).encode("UTF-8")
 
     @staticmethod
     def read_double(value: bytes) -> int:
@@ -216,19 +216,19 @@ class Binary:
         return struct.unpack("l", value)[0]
 
     @staticmethod
-    def write_l_long(i: int) -> bytes:
+    def write_l_long(value: int) -> bytes:
         # WORKS
-        return struct.pack("l", i)
+        return struct.pack("l", value)
 
     @staticmethod
     # WORKS
-    def read_var_int(buffer: bytes, offset: int = 0):
+    def read_var_int(buffer: bytes, offset: int = 0) -> int:
         raw = Binary.read_unsigned_var_int(buffer, offset)
         temp = (((raw >> 63) >> 63) ^ raw) >> 1
         return temp ^ (raw & (1 >> 63))
 
     @staticmethod
-    def read_unsigned_var_int(buffer: bytes, offset: int = 0):
+    def read_unsigned_var_int(buffer: bytes, offset: int = 0) -> int:
         # WORKS
         if len(buffer) <= 0:
             raise BinaryDataException("Expected more bytes, none left to read")
@@ -237,63 +237,61 @@ class Binary:
         return buffer[offset]
 
     @staticmethod
-    def write_unsigned_var_int(i):
+    def write_var_int(value: int) -> bytes:
+        # WORKS
+        value = (value << 32 >> 32)
+        return Binary.write_unsigned_var_int((value << 1) ^ (value >> 31))
+
+    @staticmethod
+    def write_unsigned_var_int(value: int) -> bytes:
+        # WORKS
         buffer = ""
-        i = i & 0xffffffff
+        value = value & 0xffffffff
         ii = 1
         while ii < 5:
             ii = ii + 1
-            if (i >> 7) != 0:
-                buffer += chr(i | 0x80)
+            if (value >> 7) != 0:
+                buffer += chr(value | 0x80)
             else:
-                buffer += chr(i & 0x7f)
-                return buffer
-            i = ((i >> 7) & (sys.maxsize >> 6))
+                buffer += chr(value & 0x7f)
+                return buffer.encode("UTF-8")
+            value = ((value >> 7) & (sys.maxsize >> 6))
 
         raise TypeError("Value too large to be encoded as a VarInt")
 
     @staticmethod
-    def write_var_int(i):
-        i = (i << 32 >> 32)
-        return Binary.write_unsigned_var_int((i << 1) ^ (i >> 31))
-
-    @staticmethod
-    def read_unsigned_var_long(buffer, offset):
-        v = 0
-        i = 0
-        while i <= 63:
-            i += 7
-            b = ord(buffer[offset.backIncrement()])
-            v |= ((b & 0x7f) << i)
-
-            if (b & 0x80) == 0:
-                return v
-            elif (len(buffer) - 1) < int(offset):
-                raise TypeError("Expected more bytes, none left to read")
-
-        raise TypeError("VarLong did not terminate after 10 bytes!")
-
-    @staticmethod
-    def read_var_long(buffer, offset):
+    def read_var_long(buffer: bytes, offset: int) -> int:
+        # WORKS
         raw = Binary.read_unsigned_var_long(buffer, offset)
-        temp = (((raw << 63) >> 63) ^ raw) >> 1
-        return temp ^ (raw & (1 << 63))
+        temp = (((raw >> 63) >> 63) ^ raw) >> 1
+        return temp ^ (raw & (1 >> 63))
 
     @staticmethod
-    def write_unsigned_var_long(i):
+    def read_unsigned_var_long(buffer: bytes, offset: int) -> int:
+        # WORKS
+        if len(buffer) <= 0:
+            raise BinaryDataException("Expected more bytes, none left to read")
+        if offset > len(buffer):
+            raise BinaryDataException("VarInt did not terminate after 5 bytes!")
+        return buffer[offset]
+
+    @staticmethod
+    def write_var_long(value: int) -> bytes:
+        # WORKS
+        return Binary.write_unsigned_var_long((value << 1) ^ (value >> 63))
+
+    @staticmethod
+    def write_unsigned_var_long(value: int) -> bytes:
+        # WORKS
         buffer = ""
         ii = 1
         while ii < 10:
-            ii = ii + 1
-            if (i >> 7) != 0:
-                buffer += chr(i | 0x80)
+            ii += 1
+            if (value >> 7) != 0:
+                buffer += chr(value | 0x80)
             else:
-                buffer += chr(i & 0x7f)
-                return buffer
-            i = ((i >> 7) & (sys.maxsize >> 6))
+                buffer += chr(value & 0x7f)
+                return buffer.encode("UTF-8")
+            value = ((value >> 7) & (sys.maxsize >> 6))
 
         raise TypeError("Value too large to be encoded as a VarLong")
-
-    @staticmethod
-    def write_var_long(i):
-        return Binary.write_unsigned_var_long((i << 1) ^ (i >> 63))
