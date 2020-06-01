@@ -12,7 +12,7 @@ class UDPServerSocket:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         try:
             # TODO: Add IPv6 support
-            self.socket.bind((bind_address.get_ip(), bind_address.get_port()))
+            self.socket.bind((bind_address.ip, bind_address.port))
         except Exception as e:
             print("FAILED TO BIND TO PORT! Perhaps another server is running on the port?")
             print(str(e))

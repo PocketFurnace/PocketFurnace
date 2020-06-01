@@ -92,25 +92,24 @@ class SessionManager:
         self.last_measure = microtime(True)
         while not self.shutdown:
             start = microtime(True)
-            stream = True
-            for ix in range(0, 100):
-                ix += 1
-                stream = self.receive_stream()
-            socket = True
-            for iy in range(0, 100):
-                iy += 1
-                socket = self.receive_packet()
-            self.tick()
+            maximum = 5000
+
+            while --maximum and self.receive_packet():
+                pass
+            while self.receive_stream():
+                pass
+            
             time_ = microtime(True) - start
             if time_ < self.RAKLIB_TIME_PER_TICK:
                 time.sleep((microtime(True) + self.RAKLIB_TIME_PER_TICK - time_) - time.time())
+            self.tick()
 
     def tick(self):
         time_ = microtime(True)
         values = list(self.sessions.values())
         for session in values:
             session.update(time_)
-        for (address, count) in self.ip_sec.items():
+        for (address, count) in self.ip_sec:
             if count > self.packet_limit or count == self.packet_limit:
                 self.block_address(address)
         self.ip_sec = {}
@@ -124,7 +123,7 @@ class SessionManager:
                 }))
                 self.send_bytes = 0
                 self.receive_bytes = 0
-            self.last_measure = time_
+                self.last_measure = time_
 
             if len(self.block) > 0:
                 # TODO: Remove this?
@@ -146,13 +145,13 @@ class SessionManager:
         self.receive_bytes += packet_length
         if address.get_ip() in self.block:
             return True
-        if address.ip in self.ip_sec:
-            ipsec = self.ip_sec[address.ip] + 1
+        if length[1][0] in self.ip_sec:
+            ipsec = self.ip_sec[length[1][0]] + 1
             if ipsec >= self.packet_limit:
                 self.block_address(address.ip)
                 return True
         else:
-            self.ip_sec[address.ip] = 1
+            self.ip_sec[(length[1][0], length[1][1])] = 1
         if packet_length < 1:
             return True
         buffer = length[0]
@@ -272,17 +271,18 @@ class SessionManager:
         buffer += Binary.write_int(ping_ms)
         self.server.push_thread_to_main_packet(buffer)
 
-    def receive_stream(self):
+    def receive_stream(self) -> bool:
         packet = self.server.read_main_to_thread_packet()
-        if packet is not None and len(packet) > 0:
+        if packet is None:
+            return False
+        if len(packet) > 0:
             packet_id = packet[0]
             offset = 1
             if packet_id == PyRakLib.PACKET_ENCAPSULATED:
-                offset += 1
                 length = packet[offset]
-                packet_id = packet[offset:length]
+                identifier = packet[offset:offset + length]
                 offset += length
-                session = self.sessions[packet_id] or None
+                session = self.sessions[identifier] or None
                 if session is not None and session.is_connected():
                     offset += 1
                     flags = packet[offset]
@@ -319,6 +319,7 @@ class SessionManager:
                 offset += length
                 value = packet[offset:]
                 if name == b"name":
+                    print(name+b" "+value)
                     self.name = value
                 elif name == b"portChecking":
                     self.port_checking = bool(value)

@@ -1,4 +1,5 @@
 from .Binary import Binary
+from ..raknet import PyRakLib
 
 
 class BinaryStream:
@@ -41,15 +42,13 @@ class BinaryStream:
             self.offset = buflen - 1
             return b""
         remaining = buflen - self.offset
-        from pprint import pprint
-        pprint(self.buffer)
         if remaining < _len:
-            raise ValueError(f"Not enough bytes left in buffer: need {_len}, have {remaining}")
+            print(f"Not enough bytes left in buffer: need {_len}, have {remaining}")
         if _len == 1:
             self.offset += 1
             return self.buffer[self.offset]
         if _len == 16:
-            return self.buffer[9:25]
+            return self.buffer[self.buffer.find(PyRakLib.MAGIC):self.buffer.find(PyRakLib.MAGIC) + len(PyRakLib.MAGIC)]
         return self.buffer[0:_len]
 
     def get_remaining(self):
