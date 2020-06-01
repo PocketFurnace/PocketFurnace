@@ -17,7 +17,6 @@ class OfflineMessageHandler:
         self.session_manager = session_manager
 
     def handle(self, packet, address: InternetAddress) -> bool:
-        # pprint(packet.ID)
         if packet.ID == UnconnectedPing.ID:
             pk = UnconnectedPong()
             pk.server_id = self.session_manager.get_id()

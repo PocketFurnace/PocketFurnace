@@ -86,18 +86,3 @@ class PyRakLibServer(Thread):
         atexit.register(self.shutdown_handler)
         socket = UDPServerSocket(self.address)
         SessionManager(self, socket, self.max_mtu_size)
-
-    def __str__(self):
-        print("INTERNAL QUEUE:")
-        while not self.internal_queue.empty():
-            pprint(self.internal_queue.get())
-        print("EXTERNAL QUEUE:")
-        while not self.external_queue.empty():
-            pprint(self.external_queue.get())
-        return "(PyRakLibServer)" + \
-               "ADDRESS: " + self.address.__str__() + \
-               "SERVER_ID: " + str(self.server_id) + \
-               "MAIN_PATH: " + self.main_path + \
-               "MAX_MTU_SIZE: " + str(self.max_mtu_size) + \
-               "PROTOCOL_VERSION: " + str(self.protocol_version) + \
-               "SHUTDOWN: " + str(self._shutdown)

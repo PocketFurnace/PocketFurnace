@@ -7,6 +7,7 @@ class Datagram(Packet):
     BITFLAG_VALID = 0x80
     BITFLAG_ACK = 0x40
     BITFLAG_NACK = 0x20
+
     BITFLAG_PACKET_PAIR = 0x10
     BITFLAG_CONTINUOS_SEND = 0x08
     BITFLAG_NEEDS_B_AND_AS = 0x04
@@ -40,13 +41,13 @@ class Datagram(Packet):
         while not self.feof():
             offset = 0
             data = self.buffer[offset:]
-            packet = EncapsulatedPacket.from_binary(data, offset)
+            packet = EncapsulatedPacket.from_binary(data)
             self.offset += offset
             if packet.buffer == b"":
                 break
             self.packets.append(packet)
 
     def clean(self):
-        self.packets = []
+        self.packets.clear()
         self.seq_number = None
         return super().clean()

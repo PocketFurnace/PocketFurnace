@@ -21,11 +21,7 @@ class ConnectionRequestAccepted(Packet):
         self.put_short(0)
         dummy = InternetAddress("0.0.0.0", 0, 4)
         while i < PyRakLib.SYSTEM_ADDRESS_COUNT:
-            try:
-                self.system_addresses.insert(i, self.put_address(self.system_addresses[i]))
-            except IndexError:
-                self.system_addresses.insert(i, self.put_address(dummy))
-                pass
+            self.put_address(self.system_addresses[i] or dummy)
             i += 1
         self.put_long(self.send_ping_time)
         self.put_long(self.send_pong_time)

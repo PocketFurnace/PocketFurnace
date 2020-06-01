@@ -7,7 +7,9 @@ class EncapsulatedPacket:
 
     RELIABILITY_SHIFT = 5
     RELIABILITY_FLAGS = 0b111 << RELIABILITY_SHIFT
+
     SPLIT_FLAG = 0b00010000
+
     reliability = None
     has_split = False
     length = 0
@@ -23,8 +25,9 @@ class EncapsulatedPacket:
     identifier_ack = None
 
     @staticmethod
-    def from_internal_binary(binary_bytes: bytes, offset=0):
+    def from_internal_binary(binary_bytes: bytes):
         packet = EncapsulatedPacket()
+        offset = 0
         offset += 1
         packet.reliability = binary_bytes[offset]
         length = Binary.read_int(binary_bytes[offset:4])
@@ -48,7 +51,7 @@ class EncapsulatedPacket:
         return buffer
 
     @staticmethod
-    def from_binary(binary: bytes, offset: int = 0):
+    def from_binary(binary: bytes):
         packet = EncapsulatedPacket()
         flags = binary[0]
         reliability = (flags & 0b111 << 5) >> 5

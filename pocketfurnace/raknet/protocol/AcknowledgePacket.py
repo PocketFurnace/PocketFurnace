@@ -8,8 +8,8 @@ class AcknowledgePacket(Packet):
     packets = []
 
     def _encodePayload(self) -> None:
-        payload = ""
-        self.packets.sort()
+        payload = b""
+        self.packets.sort(key=int)
         count = len(self.packets)
         records = 0
 
@@ -19,7 +19,8 @@ class AcknowledgePacket(Packet):
             last = self.packets[0]
 
             while pointer < count:
-                current = self.packets[pointer + 1]
+                pointer += 1
+                current = self.packets[pointer]
                 diff = current - last
                 if diff == 1:
                     last = current
@@ -33,7 +34,6 @@ class AcknowledgePacket(Packet):
                         payload += Binary.write_l_triad(start)
                         payload += Binary.write_l_triad(last)
                         start = last = current
-
                     records += 1
 
             if start is last:
@@ -43,25 +43,13 @@ class AcknowledgePacket(Packet):
                 payload += chr(self.RECORD_TYPE_RANGE)
                 payload += Binary.write_l_triad(start)
                 payload += Binary.write_l_triad(last)
-
-            records += 1
-            self.put_short(records)
-            self.buffer += payload
-
-            if start == last:
-                payload += chr(self.RECORD_TYPE_SINGLE)
-                payload += (Binary.write_l_triad(start))
-            else:
-                payload += chr(self.RECORD_TYPE_RANGE)
-                payload += (Binary.write_l_triad(start))
-                payload += (Binary.write_l_triad(last))
             records += 1
         self.put_short(records)
         self.buffer += payload
 
     def _decodePayload(self) -> None:
         count = self.get_short()
-        self.packets = []
+        self.packets.clear()
         cnt = 0
         i = 0
         while i < count and not self.feof() and cnt < 4096:
@@ -71,9 +59,9 @@ class AcknowledgePacket(Packet):
                 if (end - start) > 512:
                     end = start + 512
                 c = start
-                while c == end or c < end:
+                while c <= end:
                     cnt += 1
-                    self.packets[cnt] = c
+                    self.packets.insert(cnt, c)
                     c += 1
             else:
                 cnt += 1
@@ -81,5 +69,5 @@ class AcknowledgePacket(Packet):
             i += 1
 
     def clean(self):
-        super().clean()
-        self.packets = []
+        self.packets.clear()
+        return super().clean()

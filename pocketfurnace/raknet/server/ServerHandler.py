@@ -1,8 +1,7 @@
-from pocketfurnace.utils.Binary import Binary
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol import EncapsulatedPacket
 from pocketfurnace.raknet.server import PyRakLibServer, ServerInstance
-from pprint import pprint
+from pocketfurnace.utils.Binary import Binary
 
 
 class ServerHandler:
@@ -40,11 +39,11 @@ class ServerHandler:
         buffer += reason
         self.server.push_main_to_thread_packet(buffer)
 
-    def send_option(self, name: str, value: str):
-        buffer = ""
-        buffer += chr(PyRakLib.PACKET_SET_OPTION)
-        buffer += chr(len(name))
-        buffer += name
+    def send_option(self, name: str, value: bytes):
+        buffer = b""
+        buffer += chr(PyRakLib.PACKET_SET_OPTION).encode("UTF-8")
+        buffer += chr(len(name)).encode("UTF-8")
+        buffer += name.encode("UTF-8")
         buffer += value
         self.server.push_main_to_thread_packet(buffer)
 

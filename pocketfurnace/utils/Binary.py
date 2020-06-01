@@ -2,7 +2,6 @@ import re
 import struct
 import sys
 
-from pocketfurnace.utils.BinaryStream import BinaryDataException
 
 ENDIANNESS = 0x00 if struct.pack("b", 1) == b"\x01" else 0x01
 
@@ -151,12 +150,12 @@ class Binary:
         return struct.unpack(">f", value)[0]
 
     @staticmethod
-    def read_rounded_float(value: str, accuracy: int) -> float:
+    def read_rounded_float(value: bytes, accuracy: int) -> float:
         # WORKS
-        return round(Binary.read_float(value.encode("UTF-8")), accuracy)
+        return round(Binary.read_float(value), accuracy)
 
     @staticmethod
-    def write_float(value: int) -> bytes:
+    def write_float(value: float) -> bytes:
         # WORKS
         return struct.pack(">f", value)
 
@@ -166,12 +165,12 @@ class Binary:
         return struct.unpack("<f", value)[0]
 
     @staticmethod
-    def read_rounded_l_float(value: str, accuracy: int) -> float:
+    def read_rounded_l_float(value: bytes, accuracy: int) -> float:
         # WORKS
-        return round(Binary.read_l_float(value.encode("UTF-8")), accuracy)
+        return round(Binary.read_l_float(value), accuracy)
 
     @staticmethod
-    def write_l_float(value: int) -> bytes:
+    def write_l_float(value: float) -> bytes:
         # WORKS
         return struct.pack("<f", value)
 
@@ -186,7 +185,7 @@ class Binary:
         return struct.unpack(">d", value)[0]
 
     @staticmethod
-    def write_double(value: int) -> bytes:
+    def write_double(value: float) -> bytes:
         # WORKS
         return struct.pack(">d", value)
 
@@ -196,13 +195,12 @@ class Binary:
         return struct.unpack("<d", value)[0]
 
     @staticmethod
-    def write_l_double(value: int) -> bytes:
+    def write_l_double(value: float) -> bytes:
         # WORKS
         return struct.pack("<d", value)
 
     @staticmethod
     def read_long(value: bytes) -> int:
-        # WORKS
         return struct.unpack(">q", value)[0]
 
     @staticmethod
@@ -231,9 +229,9 @@ class Binary:
     def read_unsigned_var_int(buffer: bytes, offset: int = 0) -> int:
         # WORKS
         if len(buffer) <= 0:
-            raise BinaryDataException("Expected more bytes, none left to read")
+            raise TypeError("Expected more bytes, none left to read")
         if offset > len(buffer):
-            raise BinaryDataException("VarInt did not terminate after 5 bytes!")
+            raise ValueError("VarInt did not terminate after 5 bytes!")
         return buffer[offset]
 
     @staticmethod
@@ -270,9 +268,9 @@ class Binary:
     def read_unsigned_var_long(buffer: bytes, offset: int) -> int:
         # WORKS
         if len(buffer) <= 0:
-            raise BinaryDataException("Expected more bytes, none left to read")
+            raise ValueError("Expected more bytes, none left to read")
         if offset > len(buffer):
-            raise BinaryDataException("VarInt did not terminate after 5 bytes!")
+            raise ValueError("VarInt did not terminate after 5 bytes!")
         return buffer[offset]
 
     @staticmethod

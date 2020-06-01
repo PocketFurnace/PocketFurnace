@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from pocketfurnace.utils.Binary import Binary
+
 from pocketfurnace.raknet.utils.InternetAddress import InternetAddress
 from pocketfurnace.utils.BinaryStream import BinaryStream
 
@@ -9,8 +9,8 @@ class Packet(BinaryStream):
     ID = -1
     send_time = None
 
-    def get_string(self):
-        return "MCPE;PocketFurnace Server;390;1.14.60;0;10;0;PocketFurnace;Survival"
+    def get_string(self) -> bytes:
+        return self.get(self.get_short())
 
     def get_address(self) -> InternetAddress:
         version = self.get_byte()
@@ -23,9 +23,9 @@ class Packet(BinaryStream):
         else:
             raise ValueError("Unknown IP address version " + str(version))
 
-    def put_string(self, string: str):
+    def put_string(self, string: bytes):
         self.put_short(len(string))
-        self.put(bytes(string, encoding="UTF-8"))
+        self.put(string)
 
     def put_address(self, address: InternetAddress):
         self.put_byte(address.version)
@@ -52,6 +52,7 @@ class Packet(BinaryStream):
 
     def decode(self):
         self.offset = 0
+        self._decodeHeader()
         self._decodePayload()
 
     def _decodeHeader(self):
@@ -62,7 +63,7 @@ class Packet(BinaryStream):
         pass
 
     def clean(self):
-        self.buffer = ""
+        self.buffer = b""
         self.offset = 0
         self.send_time = None
         return self

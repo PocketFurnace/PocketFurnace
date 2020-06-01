@@ -2,7 +2,7 @@ import copy
 import json
 import math
 import time
-from pprint import pprint
+
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol.ACK import ACK
 from pocketfurnace.raknet.protocol.AdvertiseSystem import AdvertiseSystem
@@ -177,13 +177,10 @@ class SessionManager:
                     while pointer:
                         try:
                             pk.decode()
-                            print("MAGIC FROM PK")
-                            pprint(pk._magic)
+                            from pprint import pprint
                             if not pk.is_valid():
                                 raise ValueError("Packet magic is invalid")
                         except Exception as e:
-                            print(e.__str__())
-                            print("received garbage message")
                             self.block_address(address.ip, 5)
                             raise e
                         pointer = False
@@ -278,7 +275,7 @@ class SessionManager:
     def receive_stream(self):
         packet = self.server.read_main_to_thread_packet()
         if packet is not None and len(packet) > 0:
-            packet_id = ord(packet[0])
+            packet_id = packet[0]
             offset = 1
             if packet_id == PyRakLib.PACKET_ENCAPSULATED:
                 offset += 1
@@ -316,16 +313,16 @@ class SessionManager:
                 if packet_id in self.sessions:
                     self.remove_session(self.sessions[packet_id])
             elif packet_id == PyRakLib.PACKET_SET_OPTION:
-                length = ord(packet[offset])
+                length = packet[offset]
                 offset += 1
                 name = packet[offset:offset + length]
                 offset += length
                 value = packet[offset:]
-                if name == "name":
+                if name == b"name":
                     self.name = value
-                elif name == "portChecking":
+                elif name == b"portChecking":
                     self.port_checking = bool(value)
-                elif name == "packetLimit":
+                elif name == b"packetLimit":
                     self.packet_limit = int(value)
                 else:
                     pass

@@ -1,10 +1,4 @@
-import sys
-from pprint import pprint
-from pocketfurnace.utils.Binary import Binary
-
-
-class BinaryDataException(Exception):
-    pass
+from .Binary import Binary
 
 
 class BinaryStream:
@@ -18,7 +12,6 @@ class BinaryStream:
     def reset(self):
         self.buffer = b""
         self.offset = 0
-        return self
 
     def rewind(self):
         self.offset = 0
@@ -37,50 +30,54 @@ class BinaryStream:
         return self.buffer
 
     def get(self, _len):
-        pprint("BUFFER FROM GET")
-        pprint(self.buffer)
         if _len == 0:
             return b""
-        bufflen = len(self.buffer)
-        if _len == 16:
-            return b'\x00\xff\xff\x00\xfe\xfe\xfe\xfe\xfd\xfd\xfd\xfd\x124Vx'
+        buflen = len(self.buffer)
+        if _len is True:
+            string = self.buffer[self.offset:]
+            self.offset = buflen
+            return string
         if _len < 0:
-            self.offset = bufflen - 1
+            self.offset = buflen - 1
             return b""
-        remaining = bufflen - self.offset
+        remaining = buflen - self.offset
+        from pprint import pprint
+        pprint(self.buffer)
         if remaining < _len:
-            raise BinaryDataException("Not enough bytes left in buffer")
+            raise ValueError(f"Not enough bytes left in buffer: need {_len}, have {remaining}")
         if _len == 1:
             self.offset += 1
             return self.buffer[self.offset]
-        else:
-            offset = (self.offset + _len) - _len
-            return self.buffer[offset: offset + _len]
+        if _len == 16:
+            return self.buffer[9:25]
+        return self.buffer[0:_len]
 
     def get_remaining(self):
         bufflen = len(self.buffer)
         if self.offset >= bufflen:
-            raise BinaryDataException("No bytes left to read")
-        _str = self.buffer[self.offset:]
+            raise ValueError("No bytes left to read")
+        string = self.buffer[self.offset:]
         self.offset = bufflen
-        return _str
+        return string
 
     def put(self, _bytes: bytes):
+        if isinstance(_bytes, str):
+            _bytes.encode("UTF-8")
         self.buffer += _bytes
 
-    def get_boolean(self) -> bool:
+    def get_bool(self) -> bool:
         return self.get(1) != b"\x00"
 
-    def put_boolean(self, _bool: bool):
+    def put_bool(self, _bool: bool):
         self.buffer += (b"\x01" if _bool else b"\x00")
 
     def get_byte(self) -> int:
-        return ord(self.get(1))
+        return self.get(1)
 
-    def put_byte(self, b):
+    def put_byte(self, b: int):
         self.buffer += chr(b).encode("UTF-8")
 
-    def get_short(self):
+    def get_short(self) -> int:
         return Binary.read_short(self.get(2))
 
     def get_signed_short(self):
@@ -89,22 +86,22 @@ class BinaryStream:
     def put_short(self, v: int):
         self.buffer += Binary.write_short(v)
 
-    def get_l_short(self):
+    def get_l_short(self) -> int:
         return Binary.read_l_short(self.get(2))
 
-    def get_signed_l_short(self):
+    def get_signed_l_short(self) -> int:
         return Binary.read_signed_short(self.get(2))
 
     def put_l_short(self, v: int):
         self.buffer += Binary.write_l_short(v)
 
-    def get_triad(self):
+    def get_triad(self) -> int:
         return Binary.read_triad(self.get(3))
 
     def put_triad(self, v: int):
         self.buffer += Binary.write_triad(v)
 
-    def get_l_triad(self):
+    def get_l_triad(self) -> int:
         return Binary.read_l_triad(self.get(3))
 
     def put_l_triad(self, v: int):
@@ -134,81 +131,64 @@ class BinaryStream:
     def put_l_long(self, long: int):
         self.buffer += Binary.write_l_long(long)
 
-    def get_unsigned_var_int(self):
+    def get_unsigned_var_int(self) -> int:
         return Binary.read_unsigned_var_int(self.buffer, self.offset)
 
-    def get_var_int(self):
+    def get_var_int(self) -> int:
         return Binary.read_var_int(self.buffer, self.offset)
 
-    def put_var_int(self, v):
+    def put_var_int(self, v: int):
         self.put(Binary.write_var_int(v))
 
-    def get_unsigned_var_long(self):
+    def get_unsigned_var_long(self) -> int:
         return Binary.read_unsigned_var_long(self.buffer, self.offset)
 
-    def put_unsigned_var_long(self, v):
+    def put_unsigned_var_long(self, v: int):
         self.buffer += Binary.write_unsigned_var_long(v)
 
-    def get_var_long(self):
+    def get_var_long(self) -> int:
         return Binary.read_var_long(self.buffer, self.offset)
 
-    def put_var_long(self, v):
+    def put_var_long(self, v: int):
         self.buffer += Binary.write_var_long(v)
 
-    def put_unsigned_var_int(self, v):
+    def put_unsigned_var_int(self, v: int):
         self.put(Binary.write_unsigned_var_int(v))
 
-    def get_float(self) -> int:
+    def get_float(self) -> float:
         return Binary.read_float(self.get(4))
 
-    def get_rounded_float(self, accuracy: int):
+    def get_rounded_float(self, accuracy: int) -> float:
         return Binary.read_rounded_float(self.get(4), accuracy)
 
-    def put_float(self, f: int):
+    def put_float(self, f: float):
         self.buffer += Binary.write_float(f)
 
-    def get_l_float(self) -> int:
+    def get_l_float(self) -> float:
         return Binary.read_l_float(self.get(4))
 
     def get_rounded_l_float(self, accuracy: int):
         return Binary.read_rounded_l_float(self.get(4), accuracy)
 
-    def put_l_float(self, f: int):
+    def put_l_float(self, f: float):
         self.buffer += Binary.write_l_float(f)
 
-    def get_double(self):
+    def get_double(self) -> float:
         return Binary.read_double(self.get(8))
 
-    def put_double(self, v):
+    def put_double(self, v: float):
         self.buffer += Binary.write_double(v)
 
     def get_l_double(self):
         return Binary.read_l_double(self.get(8))
 
-    def put_l_double(self, v):
+    def put_l_double(self, v: float):
         self.buffer *= Binary.write_l_double(v)
 
-    def feof(self):
-        return self.offset not in self.buffer
-
-    def ensure_capacity(self, min_capacity: int):
-        if (min_capacity - len(self.buffer)) > 0:
-            self.grow(min_capacity)
-
-    def grow(self, min_capacity: int):
-        old_capacity = len(self.buffer)
-        new_capacity = old_capacity << 1
-
-        if (new_capacity - min_capacity) < 0:
-            new_capacity = min_capacity
-
-        if (new_capacity - 5) > 0:
-            new_capacity = BinaryStream.huge_capacity(min_capacity)
-
-        self.buffer = self.buffer[:new_capacity]
-
-    @staticmethod
-    def huge_capacity(min_capacity: int) -> int:
-        if min_capacity < 0:
-            MemoryError("Memory has filled out")
-        return sys.maxsize if min_capacity > 5 else 5
+    # noinspection PyStatementEffect
+    def feof(self) -> bool:
+        try:
+            self.buffer[self.offset]
+            return True
+        except(NameError, KeyError, IndexError):
+            return False
