@@ -2,6 +2,7 @@ import copy
 import json
 import math
 import time
+from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol.AdvertiseSystem import AdvertiseSystem
@@ -140,8 +141,6 @@ class SessionManager:
         address = self.reusable_address
         packet_length = len(buffer)
         self.receive_bytes += packet_length
-        if address.get_ip() in self.block or source[0] in self.block:
-            return True
         if len(buffer) < 0:
             return False
         try:
@@ -150,7 +149,6 @@ class SessionManager:
             self.ip_sec[source] = 1
             pass
         packet = self.get_packet_from_pool(buffer[0])
-
         if packet is not None:
             packet.buffer = buffer
             session = self.get_session(InternetAddress(source[0], source[1], 4))

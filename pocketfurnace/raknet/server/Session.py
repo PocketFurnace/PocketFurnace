@@ -3,6 +3,7 @@ import copy
 import math
 import time as time_
 from collections import deque
+from pprint import pprint
 
 from pocketfurnace.raknet import PyRakLib
 from pocketfurnace.raknet.protocol import DisconnectionNotification
@@ -475,7 +476,7 @@ class Session:
                 packet.decode()
                 if isinstance(packet, UnconnectedPing):
                     pk = UnconnectedPong()
-                    pk.server_id = 0  # self.sessionManager.getID()
+                    pk.server_id = self.session_manager.get_id()
                     pk.ping_id = packet.ping_id
                     pk.server_name = self.session_manager.get_name()
                     self.send_packet(pk)

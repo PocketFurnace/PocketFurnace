@@ -1,3 +1,4 @@
+from pocketfurnace.raknet.protocol.Datagram import Datagram
 from pocketfurnace.raknet.protocol.MessageIdentifiers import MessageIdentifiers
 from pocketfurnace.raknet.protocol.OfflineMessage import OfflineMessage
 
