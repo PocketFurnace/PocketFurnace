@@ -23,9 +23,9 @@ class Packet(BinaryStream):
         else:
             raise ValueError("Unknown IP address version " + str(version))
 
-    def put_string(self, string: bytes):
+    def put_string(self, string: str):
         self.put_short(len(string))
-        self.put(string)
+        self.put(string.encode("UTF-8"))
 
     def put_address(self, address: InternetAddress):
         self.put_byte(address.version)

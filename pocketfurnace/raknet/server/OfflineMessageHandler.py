@@ -7,7 +7,6 @@ from pocketfurnace.raknet.protocol.UnconnectedPing import UnconnectedPing
 from pocketfurnace.raknet.protocol.UnconnectedPong import UnconnectedPong
 from pocketfurnace.raknet.server.Session import Session
 from pocketfurnace.raknet.utils.InternetAddress import InternetAddress
-from pprint import pprint
 
 
 class OfflineMessageHandler:

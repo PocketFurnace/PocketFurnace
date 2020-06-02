@@ -39,11 +39,10 @@ class ServerHandler:
         buffer += reason
         self.server.push_main_to_thread_packet(buffer)
 
-    def send_option(self, name: str, value: bytes):
-        buffer = b""
-        buffer += chr(PyRakLib.PACKET_SET_OPTION).encode("UTF-8")
-        buffer += chr(len(name)).encode("UTF-8")
-        buffer += name.encode("UTF-8")
+    def send_option(self, name: str, value: str):
+        buffer = chr(PyRakLib.PACKET_SET_OPTION)
+        buffer += chr(len(name))
+        buffer += name
         buffer += value
         self.server.push_main_to_thread_packet(buffer)
 

@@ -17,8 +17,14 @@ from pocketfurnace.raknet.protocol.EncapsulatedPacket import EncapsulatedPacket
 from pocketfurnace.raknet.protocol.MessageIdentifiers import MessageIdentifiers
 from pocketfurnace.raknet.protocol.NACK import NACK
 from pocketfurnace.raknet.protocol.NewIncomingConnection import NewIncomingConnection
+from pocketfurnace.raknet.protocol.OpenConnectionReply1 import OpenConnectionReply1
+from pocketfurnace.raknet.protocol.OpenConnectionReply2 import OpenConnectionReply2
+from pocketfurnace.raknet.protocol.OpenConnectionRequest1 import OpenConnectionRequest1
+from pocketfurnace.raknet.protocol.OpenConnectionRequest2 import OpenConnectionRequest2
 from pocketfurnace.raknet.protocol.Packet import Packet
 from pocketfurnace.raknet.protocol.PacketReliability import PacketReliability
+from pocketfurnace.raknet.protocol.UnconnectedPing import UnconnectedPing
+from pocketfurnace.raknet.protocol.UnconnectedPong import UnconnectedPong
 from pocketfurnace.raknet.server import SessionManager
 from pocketfurnace.raknet.utils.InternetAddress import InternetAddress
 
@@ -136,7 +142,7 @@ class Session:
         self.send_sequenced_index = [index for index in range(0, self.CHANNEL_COUNT)]
         self.receive_ordered_index = [index for index in range(0, self.CHANNEL_COUNT)]
         self.receive_sequenced_highest_index = [index for index in range(0, self.CHANNEL_COUNT)]
-        self.receive_ordered_packets = [[] for index in range(0, self.CHANNEL_COUNT)]
+        self.receive_ordered_packets = [[] in range(0, self.CHANNEL_COUNT)]
         self.mtu_size = mtu_size
 
     def get_address(self) -> InternetAddress:
@@ -227,7 +233,7 @@ class Session:
         self.recovery_queue.update({datagram.seq_number: datagram})
         self.send_packet(datagram)
 
-    def _queue_connected_packet(self, packet: Packet, reliability: int, order_channel: int, flags: int):
+    def _queue_connected_packet(self, packet: Packet, reliability: int, order_channel: int, flags: int = PyRakLib.PRIORITY_NORMAL):
         packet.encode()
         encapsulated = EncapsulatedPacket()
         encapsulated.reliability = reliability
@@ -307,11 +313,11 @@ class Session:
         if packet.split_count >= self.MAX_SPLIT_SIZE or packet.split_count < 0 or packet.split_index >= packet.split_count or packet.split_index < 0:
             # self.session_manager.get_logger.debug()
             return
-        if packet.split_id in  self.split_packets:
+        if packet.split_id in self.split_packets:
             if len(self.split_packets) >= self.MAX_SPLIT_COUNT:
                 # DEBUG IGNORED SPLIT PART
                 return
-            self.split_packets.insert(packet.split_id, [None for i in range(0, packet.split_count)])
+            self.split_packets.insert(packet.split_id, [None in range(0, packet.split_count)])
         elif len(self.split_packets[packet.split_id]) != packet.split_count:
             print("[Session] Wrong split count")
             return
@@ -465,6 +471,30 @@ class Session:
                 assert isinstance(pk, EncapsulatedPacket)
                 self.handle_encapsulated_packet(pk)
         else:
+            if 0x00 < packet.buffer[0] < 0x80:
+                packet.decode()
+                if isinstance(packet, UnconnectedPing):
+                    pk = UnconnectedPong()
+                    pk.server_id = 0  # self.sessionManager.getID()
+                    pk.ping_id = packet.ping_id
+                    pk.server_name = self.session_manager.get_name()
+                    self.send_packet(pk)
+                elif isinstance(packet, OpenConnectionRequest1):
+                    # packet.protocol TODO: check protocol number and refuse connections
+                    pk = OpenConnectionReply1()
+                    pk.mtu_size = packet.mtu_size
+                    pk.server_id = self.session_manager.get_id()
+                    self.send_packet(pk)
+                    self.state = self.STATE_CONNECTING
+                elif self.state == self.STATE_CONNECTING and isinstance(packet, OpenConnectionRequest2):
+                    if packet.get_address().get_port() == self.session_manager.reusable_address.port or not self.session_manager.port_checking:
+                        self.mtu_size = min(abs(packet.mtu_size), 1464)  # Max size, do not allow creating large buffers to fill server memory
+                        pk = OpenConnectionReply2()
+                        pk.mtu_size = self.mtu_size
+                        pk.server_id = self.session_manager.get_id()
+                        pk.client_address = self.address
+                        self.send_packet(pk)
+                        self.state = self.STATE_CONNECTING
             if isinstance(packet, ACK):
                 packet.decode()
                 for seq in packet.packets:

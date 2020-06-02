@@ -6,7 +6,6 @@ import queue
 import random
 import sys
 from threading import Thread
-from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.server.SessionManager import SessionManager
