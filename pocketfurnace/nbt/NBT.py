@@ -16,26 +16,28 @@ class NBT:
     TAG_IntArray = 11
 
     @staticmethod
-    def createTag(type: int) -> NamedTag:
-        if type == NBT.TAG_Byte:
+    def create_tag(_type: int) -> NamedTag:
+        if _type == NBT.TAG_Byte:
             pass
-        if type == NBT.TAG_Short:
+        elif _type == NBT.TAG_Short:
             pass
-        if type == NBT.TAG_Int:
+        elif _type == NBT.TAG_Int:
             pass
-        if type == NBT.TAG_Long:
+        elif _type == NBT.TAG_Long:
             pass
-        if type == NBT.TAG_Float:
+        elif _type == NBT.TAG_Float:
             pass
-        if type == NBT.TAG_Double:
+        elif _type == NBT.TAG_Double:
             pass
-        if type == NBT.TAG_ByteArray:
+        elif _type == NBT.TAG_ByteArray:
             pass
-        if type == NBT.TAG_String:
+        elif _type == NBT.TAG_String:
             pass
-        if type == NBT.TAG_List:
+        elif _type == NBT.TAG_List:
             pass
-        if type == NBT.TAG_Compound:
+        elif _type == NBT.TAG_Compound:
             pass
-        if type == NBT.TAG_IntArray:
+        elif _type == NBT.TAG_IntArray:
             pass
+        else:
+            raise ValueError(f"Unknown NBT tag type {_type}")

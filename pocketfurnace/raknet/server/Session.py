@@ -95,10 +95,10 @@ class Session:
     packet_to_send = []
     is_active = False
 
-    """@:type collections.deque"""
+    """@:_type collections.deque"""
     ack_queue = collections.deque()
 
-    """@:type collections.deque"""
+    """@:_type collections.deque"""
     nack_queue = collections.deque()
 
     recovery_queue = {}
@@ -114,7 +114,7 @@ class Session:
 
     highest_seq_number_this_tick = -1
 
-    """@:type collections.deque"""
+    """@:_type collections.deque"""
     received_window = collections.deque()
 
     reliable_window_start = None

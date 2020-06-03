@@ -29,7 +29,7 @@ class MessageIdentifiers:
     #  RakPeer - Wrong public key passed to RakPeerInterface::Connect()
     ID_PUBLIC_KEY_MISMATCH = 0x0c
     #  RakPeer - Same as ID_ADVERTISE_SYSTEM, but intended for internal use rather than being passed to the user.
-    #  Second byte indicates type. Used currently for NAT punchthrough for receiver port advertisement. See ID_NAT_ADVERTISE_RECIPIENT_PORT
+    #  Second byte indicates _type. Used currently for NAT punchthrough for receiver port advertisement. See ID_NAT_ADVERTISE_RECIPIENT_PORT
     ID_OUT_OF_BAND_INTERNAL = 0x0d
     #  If RakPeerInterface::Send() is called where PacketReliability contains _WITH_ACK_RECEIPT, then on a later call to
     #  RakPeerInterface::Receive() you will get ID_SND_RECEIPT_ACKED or ID_SND_RECEIPT_LOSS. The message will be 5 bytes long,
@@ -202,7 +202,7 @@ class MessageIdentifiers:
     #  ReadyEvent plugin - Request of ready event state - used for pulling data when newly connecting
     ID_READY_EVENT_QUERY = 0x47
 
-    #  Lobby packets. Second byte indicates type.
+    #  Lobby packets. Second byte indicates _type.
     ID_LOBBY_GENERAL = 0x48
 
     #  RPC3, RPC4 error
@@ -267,7 +267,7 @@ class MessageIdentifiers:
     #  \sa RespondOnVerifiedJoinCapable()
     ID_FCM2_VERIFIED_JOIN_REJECTED = 0x5b
 
-    #  UDP proxy messages. Second byte indicates type.
+    #  UDP proxy messages. Second byte indicates _type.
     ID_UDP_PROXY_GENERAL = 0x5c
 
     #  SQLite3Plugin - execute
@@ -279,7 +279,7 @@ class MessageIdentifiers:
 
     #  Sent to NatTypeDetectionServer
     ID_NAT_TYPE_DETECTION_REQUEST = 0x60
-    #  Sent to NatTypeDetectionClient. Byte 1 contains the type of NAT detected.
+    #  Sent to NatTypeDetectionClient. Byte 1 contains the _type of NAT detected.
     ID_NAT_TYPE_DETECTION_RESULT = 0x61
 
     #  Used by the router2 plugin

@@ -68,7 +68,7 @@ while license_done and lang_done:
     properties.set("WORLD", "generator-settings", "")
     properties.set("WORLD", "level-name", "world")
     properties.set("WORLD", "level-seed", "")
-    properties.set("WORLD", "level-type", "DEFAULT")
+    properties.set("WORLD", "level-_type", "DEFAULT")
     properties.set("WORLD", "spawn-animals", False)
     properties.set("WORLD", "spawn-mobs", True)
     properties.set("WORLD", "allow-flight", False)

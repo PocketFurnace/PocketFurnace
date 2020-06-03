@@ -154,7 +154,7 @@ class SessionManager:
             return True
         packet = self.get_packet_from_pool(buffer[0])
         if packet is not None:
-            print(packet)
+            print(packet.__class__)
             packet.buffer = buffer
             pid = buffer[0]
             session: Session = self.get_session(InternetAddress(source[0], source[1], 4))

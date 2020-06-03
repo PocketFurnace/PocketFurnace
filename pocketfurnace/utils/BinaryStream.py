@@ -29,7 +29,7 @@ class BinaryStream:
     def get_buffer(self) -> bytes:
         return self.buffer
 
-    def get(self, length):
+    def get(self, length) -> bytes:
         if length < 0:
             return b""
         elif isinstance(length, bool) and length:
