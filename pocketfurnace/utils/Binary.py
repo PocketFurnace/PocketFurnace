@@ -1,7 +1,6 @@
 import re
 import struct
 import sys
-from pprint import pprint
 
 ENDIANNESS = 0x00 if struct.pack("b", 1) == b"\x01" else 0x01
 

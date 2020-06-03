@@ -3,7 +3,6 @@ import copy
 import math
 import time as time_
 from collections import deque
-from pprint import pprint
 
 from pocketfurnace.raknet import PyRakLib
 from pocketfurnace.raknet.protocol import DisconnectionNotification
@@ -447,7 +446,6 @@ class Session:
         self.is_active = True
         self.last_update = microtime(True)
         if isinstance(packet, Datagram):
-            print("DATAGRAM INSTANCE")
             packet.decode()
             if packet.seq_number < self.window_start or packet.seq_number > self.window_end or packet.seq_number in self.ack_queue:
                 # TODO: DEBUG RECEIVE DUPLICATE OR OUT OF WINDOW

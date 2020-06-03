@@ -23,8 +23,7 @@ class OfflineMessageHandler:
             pk.server_name = self.session_manager.get_name()
             self.session_manager.send_packet(pk, address)
             return True
-        if packet.ID == OpenConnectionRequest1.ID:
-            # self.session_manager.create_session(address, packet.)
+        if isinstance(packet, OpenConnectionRequest1):
             server_protocol = self.session_manager.server.get_protocol_version()
             if packet.protocol_version != server_protocol:
                 pk = IncompatibleProtocolVersion()
@@ -37,7 +36,7 @@ class OfflineMessageHandler:
                 pk.server_id = self.session_manager.get_id()
                 self.session_manager.send_packet(pk, address)
                 return True
-        if packet.ID == OpenConnectionRequest2.ID:
+        if isinstance(packet, OpenConnectionRequest2):
             if packet.server_address.port == self.session_manager.get_port() or not self.session_manager.port_checking:
                 if packet.mtu_size < Session.MIN_MTU_SIZE:
                     print("bad mtu size")

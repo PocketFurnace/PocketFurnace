@@ -2,7 +2,6 @@ import copy
 import json
 import math
 import time
-from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol.ACK import ACK
@@ -155,9 +154,10 @@ class SessionManager:
             return True
         packet = self.get_packet_from_pool(buffer[0])
         if packet is not None:
+            print(packet)
             packet.buffer = buffer
             pid = buffer[0]
-            session = self.get_session(InternetAddress(source[0], source[1], 4))
+            session: Session = self.get_session(InternetAddress(source[0], source[1], 4))
             if session is not None:
                 if (pid & Datagram.BITFLAG_VALID) != 0:
                     if (pid & Datagram.BITFLAG_ACK) != 0:
@@ -275,7 +275,7 @@ class SessionManager:
                     buffer = packet[offset:]
                     session.add_encapsulated_to_queue(EncapsulatedPacket.from_internal_binary(buffer), flags)
                 else:
-                    self.stream_invalid(packet_id)
+                    self.stream_invalid(packet)
             elif packet_id == PyRakLib.PACKET_RAW:
                 length = packet[offset]
                 address = packet[offset:length]
@@ -406,7 +406,7 @@ class SessionManager:
     def register_packet(self, packet_id, packet_class):
         self.packet_pool[packet_id] = packet_class()
 
-    def get_packet_from_pool(self, packet_id: int, buffer=b"") -> Packet:
+    def get_packet_from_pool(self, packet_id, buffer: object = b""):
         try:
             pk = self.packet_pool[packet_id]
             if pk is not None:

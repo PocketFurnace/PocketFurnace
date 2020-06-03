@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from .Binary import Binary
 
 
@@ -39,7 +37,6 @@ class BinaryStream:
         else:
             buffer = self.buffer[self.offset:self.offset+length]
             self.offset += length
-            pprint(buffer)
             return buffer
 
     def get_remaining(self):
