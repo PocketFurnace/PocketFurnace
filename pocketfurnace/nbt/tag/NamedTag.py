@@ -1,0 +1,2 @@
+class NamedTag:
+    pass
