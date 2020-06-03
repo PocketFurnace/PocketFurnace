@@ -365,9 +365,8 @@ class SessionManager:
 
     def create_session(self, address: InternetAddress, client_id: int, mtu_size: int) -> Session:
         self.check_sessions()
-
-        self.sessions[address.to_string()] = session = Session(self, copy.deepcopy(address), client_id, mtu_size)
-        return session
+        self.sessions.update({address.to_string(): Session(self, copy.deepcopy(address), client_id, mtu_size)})
+        return self.sessions[address.to_string()]
 
     def remove_session(self, session: Session, reason="unknown"):
         identity = session.get_address().to_string()

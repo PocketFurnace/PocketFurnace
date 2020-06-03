@@ -24,6 +24,7 @@ class OfflineMessageHandler:
             self.session_manager.send_packet(pk, address)
             return True
         if packet.ID == OpenConnectionRequest1.ID:
+            # self.session_manager.create_session(address, packet.)
             server_protocol = self.session_manager.server.get_protocol_version()
             if packet.protocol_version != server_protocol:
                 pk = IncompatibleProtocolVersion()
