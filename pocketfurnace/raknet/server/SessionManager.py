@@ -5,8 +5,12 @@ import time
 from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
+from pocketfurnace.raknet.protocol.ACK import ACK
 from pocketfurnace.raknet.protocol.AdvertiseSystem import AdvertiseSystem
+from pocketfurnace.raknet.protocol.Datagram import Datagram
 from pocketfurnace.raknet.protocol.EncapsulatedPacket import EncapsulatedPacket
+from pocketfurnace.raknet.protocol.NACK import NACK
+from pocketfurnace.raknet.protocol.OfflineMessage import OfflineMessage
 from pocketfurnace.raknet.protocol.OpenConnectionReply1 import OpenConnectionReply1
 from pocketfurnace.raknet.protocol.OpenConnectionReply2 import OpenConnectionReply2
 from pocketfurnace.raknet.protocol.OpenConnectionRequest1 import OpenConnectionRequest1
@@ -105,7 +109,7 @@ class SessionManager:
         values = list(self.sessions.values())
         for session in values:
             session.update(time_)
-        for (address, count) in self.ip_sec:
+        for (address, count) in self.ip_sec.items():
             if count > self.packet_limit or count == self.packet_limit:
                 self.block_address(address)
         self.ip_sec = {}
@@ -140,23 +144,38 @@ class SessionManager:
             buffer, source = data
         address = self.reusable_address
         packet_length = len(buffer)
-        self.receive_bytes += packet_length
-        if len(buffer) < 0:
+        if packet_length < 0:
             return False
+        self.receive_bytes += packet_length
         try:
-            self.ip_sec[source] += 1
-        except Exception:
-            self.ip_sec[source] = 1
-            pass
+            self.ip_sec[address.ip] += 1
+        except (IndexError, KeyError):
+            self.ip_sec[address.ip] = 1
+        if packet_length < 1:
+            return True
         packet = self.get_packet_from_pool(buffer[0])
         if packet is not None:
             packet.buffer = buffer
+            pid = buffer[0]
             session = self.get_session(InternetAddress(source[0], source[1], 4))
             if session is not None:
-                session.handle_packet(packet)
-            return True
-        elif buffer is not b"":
-            self.stream_raw(InternetAddress(source[0], source[1], 4), buffer)
+                if (pid & Datagram.BITFLAG_VALID) != 0:
+                    if (pid & Datagram.BITFLAG_ACK) != 0:
+                        session.handle_packet(ACK(buffer))
+                    elif (pid & Datagram.BITFLAG_NACK) != 0:
+                        session.handle_packet(NACK(buffer))
+                    else:
+                        session.handle_packet(Datagram(buffer))
+            elif session is None and isinstance(packet, OfflineMessage):
+                packet.decode()
+                if not packet.is_valid():
+                    print("Invalid magic packet")
+                if not self.offline_message_handler.handle(packet, InternetAddress(source[0], source[1], 4)):
+                    print("Unhandled unconnected packet ", packet.__class__, f" received from {address.ip}")
+            elif (pid & Datagram.BITFLAG_VALID) != 0 and (pid & 0x03):
+                print("Ignored packet due to no session opened")
+            else:
+                self.stream_raw(InternetAddress(source[0], source[1], 4), buffer)
             return True
         else:
             return False
@@ -177,9 +196,10 @@ class SessionManager:
         self.server.push_thread_to_main_packet(buffer)
 
     def stream_raw(self, address: InternetAddress, payload: bytes):
-        buffer = chr(PyRakLib.PACKET_RAW)
-        buffer += chr(len(address.get_ip()))
-        buffer += address.get_ip()
+        buffer = b""
+        buffer += chr(PyRakLib.PACKET_RAW).encode("UTF-8")
+        buffer += chr(len(address.get_ip())).encode("UTF-8")
+        buffer += address.get_ip().encode("UTF-8")
         buffer += Binary.write_short(address.port)
         buffer += payload
         self.server.push_thread_to_main_packet(buffer)
@@ -334,12 +354,11 @@ class SessionManager:
             print("Unknown address to unblock")
             pass
 
-    def get_session(self, address: InternetAddress) -> Session:
+    def get_session(self, address: InternetAddress):
         try:
             return self.sessions[address.to_string()]
         except (KeyError, IndexError, NameError):
-            self.sessions[address.to_string()] = Session(self, address, self.get_id(), self.get_max_mtu_size())
-            return self.sessions[address.to_string()]
+            return None
 
     def session_exists(self, address: InternetAddress):
         return address.to_string() in self.sessions
@@ -388,13 +407,14 @@ class SessionManager:
     def register_packet(self, packet_id, packet_class):
         self.packet_pool[packet_id] = packet_class()
 
-    def get_packet_from_pool(self, packet_id, buffer=b"") -> Packet:
+    def get_packet_from_pool(self, packet_id: int, buffer=b"") -> Packet:
         try:
-            pk = copy.deepcopy(self.packet_pool[packet_id])
+            pk = self.packet_pool[packet_id]
             if pk is not None:
+                pk = copy.deepcopy(pk)
                 pk.buffer = buffer
             return pk
-        except(IndexError, NameError):
+        except(IndexError, NameError, KeyError):
             return None
 
     def register_packets(self):

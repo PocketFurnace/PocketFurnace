@@ -25,7 +25,7 @@ class PyRakLibServer(Thread):
     protocol_version = None
 
     def __init__(self, address: InternetAddress, logger: logging.Logger = logging.getLogger("PyRakLib"),
-                 max_mtu_size: int = 1492, override_protocol_version: int = None):
+                 max_mtu_size: int = 1492, override_protocol_version: int = PyRakLib.DEFAULT_PROTOCOL_VERSION):
         super().__init__()
         self.address = address
         self.server_id = random.randint(0, sys.maxsize)
@@ -33,7 +33,7 @@ class PyRakLibServer(Thread):
         self.logger = logger
         self.internal_queue = queue.LifoQueue()
         self.external_queue = queue.LifoQueue()
-        self.protocol_version = override_protocol_version or PyRakLib.DEFAULT_PROTOCOL_VERSION
+        self.protocol_version = override_protocol_version
         if address.port < 1 or address.port > 65536:
             raise ValueError("Invalid port range")
         self.main_path = os.getcwd()

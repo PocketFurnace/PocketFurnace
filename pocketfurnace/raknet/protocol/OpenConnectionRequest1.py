@@ -7,7 +7,7 @@ from pocketfurnace.raknet.protocol.OfflineMessage import OfflineMessage
 class OpenConnectionRequest1(OfflineMessage):
     ID = MessageIdentifiers.ID_OPEN_CONNECTION_REQUEST_1
 
-    protocol = PyRakLib.DEFAULT_PROTOCOL_VERSION
+    protocol_version = PyRakLib.DEFAULT_PROTOCOL_VERSION
     mtu_size = None
 
     def _encodePayload(self):

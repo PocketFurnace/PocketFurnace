@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from .Binary import Binary
 
 
@@ -37,6 +39,7 @@ class BinaryStream:
         else:
             buffer = self.buffer[self.offset:self.offset+length]
             self.offset += length
+            pprint(buffer)
             return buffer
 
     def get_remaining(self):
@@ -57,7 +60,7 @@ class BinaryStream:
         self.buffer += (b"\x01" if _bool else b"\x00")
 
     def get_byte(self) -> int:
-        return self.get(1)
+        return ord(self.get(1))
 
     def put_byte(self, b: int):
         self.buffer += chr(b).encode("UTF-8")

@@ -16,7 +16,7 @@ class OfflineMessageHandler:
         self.session_manager = session_manager
 
     def handle(self, packet, address: InternetAddress) -> bool:
-        if packet.ID == UnconnectedPing.ID:
+        if isinstance(packet, UnconnectedPing):
             pk = UnconnectedPong()
             pk.server_id = self.session_manager.get_id()
             pk.ping_id = packet.ping_id
@@ -24,7 +24,7 @@ class OfflineMessageHandler:
             self.session_manager.send_packet(pk, address)
             return True
         if packet.ID == OpenConnectionRequest1.ID:
-            server_protocol = self.session_manager.get_protocol_version()
+            server_protocol = self.session_manager.server.get_protocol_version()
             if packet.protocol_version != server_protocol:
                 pk = IncompatibleProtocolVersion()
                 pk.protocol_version = server_protocol

@@ -447,6 +447,7 @@ class Session:
         self.is_active = True
         self.last_update = microtime(True)
         if isinstance(packet, Datagram):
+            print("DATAGRAM INSTANCE")
             packet.decode()
             if packet.seq_number < self.window_start or packet.seq_number > self.window_end or packet.seq_number in self.ack_queue:
                 # TODO: DEBUG RECEIVE DUPLICATE OR OUT OF WINDOW
@@ -488,7 +489,7 @@ class Session:
                     self.send_packet(pk)
                     self.state = self.STATE_CONNECTING
                 elif self.state == self.STATE_CONNECTING and isinstance(packet, OpenConnectionRequest2):
-                    if packet.get_address().get_port() == self.session_manager.reusable_address.port or not self.session_manager.port_checking:
+                    if packet.get_address().get_port() == self.session_manager.get_port() or not self.session_manager.port_checking:
                         self.mtu_size = min(abs(packet.mtu_size), 1464)  # Max size, do not allow creating large buffers to fill server memory
                         pk = OpenConnectionReply2()
                         pk.mtu_size = self.mtu_size
