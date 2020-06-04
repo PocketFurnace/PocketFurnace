@@ -2,6 +2,7 @@ import copy
 import json
 import math
 import time
+from pprint import pprint
 
 from pocketfurnace.raknet.PyRakLib import PyRakLib
 from pocketfurnace.raknet.protocol.ACK import ACK
@@ -105,14 +106,13 @@ class SessionManager:
 
     def tick(self):
         time_ = microtime(True)
-        values = list(self.sessions.values())
-        for session in values:
-            session.update(time_)
         for (address, count) in self.ip_sec.items():
             if count > self.packet_limit or count == self.packet_limit:
                 self.block_address(address)
         self.ip_sec = {}
-
+        values = list(self.sessions.values())
+        for session in values:
+            session.update(time_)
         if (self.ticks & 0b1111) == 0 or (self.ticks % self.RAKLIB_TPS) == 0:
             if self.send_bytes > 0 or self.receive_bytes > 0:
                 diff = max(0.005, time_ - self.last_measure)
@@ -141,10 +141,10 @@ class SessionManager:
             return False
         else:
             buffer, source = data
-        address = self.reusable_address
         packet_length = len(buffer)
         if packet_length < 0:
             return False
+        address = InternetAddress(source[0], source[1], 4)
         self.receive_bytes += packet_length
         try:
             self.ip_sec[address.ip] += 1
@@ -154,10 +154,10 @@ class SessionManager:
             return True
         packet = self.get_packet_from_pool(buffer[0])
         if packet is not None:
-            print(packet.__class__)
             packet.buffer = buffer
             pid = buffer[0]
-            session: Session = self.get_session(InternetAddress(source[0], source[1], 4))
+            session: Session = self.get_session(address)
+            pprint(self.sessions)
             if session is not None:
                 if (pid & Datagram.BITFLAG_VALID) != 0:
                     if (pid & Datagram.BITFLAG_ACK) != 0:
@@ -170,7 +170,7 @@ class SessionManager:
                 packet.decode()
                 if not packet.is_valid():
                     print("Invalid magic packet")
-                if not self.offline_message_handler.handle(packet, InternetAddress(source[0], source[1], 4)):
+                if not self.offline_message_handler.handle(packet, address):
                     print("Unhandled unconnected packet ", packet.__class__, f" received from {address.ip}")
             elif (pid & Datagram.BITFLAG_VALID) != 0 and (pid & 0x03):
                 print("Ignored packet due to no session opened")
@@ -356,7 +356,7 @@ class SessionManager:
 
     def get_session(self, address: InternetAddress):
         try:
-            return self.sessions[address.to_string()]
+            return self.sessions.get(address.to_string())
         except (KeyError, IndexError, NameError):
             return None
 
@@ -365,8 +365,8 @@ class SessionManager:
 
     def create_session(self, address: InternetAddress, client_id: int, mtu_size: int) -> Session:
         self.check_sessions()
-        self.sessions.update({address.to_string(): Session(self, copy.deepcopy(address), client_id, mtu_size)})
-        return self.sessions[address.to_string()]
+        self.sessions[address.to_string()] = Session(self, copy.deepcopy(address), client_id, mtu_size)
+        return self.sessions.get(address.to_string())
 
     def remove_session(self, session: Session, reason="unknown"):
         identity = session.get_address().to_string()

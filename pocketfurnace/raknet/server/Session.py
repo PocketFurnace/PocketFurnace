@@ -142,7 +142,7 @@ class Session:
         self.send_sequenced_index = [index for index in range(0, self.CHANNEL_COUNT)]
         self.receive_ordered_index = [index for index in range(0, self.CHANNEL_COUNT)]
         self.receive_sequenced_highest_index = [index for index in range(0, self.CHANNEL_COUNT)]
-        self.receive_ordered_packets = [[] in range(0, self.CHANNEL_COUNT)]
+        self.receive_ordered_packets = [[] for index in range(0, self.CHANNEL_COUNT)]
         self.mtu_size = mtu_size
 
     def get_address(self) -> InternetAddress:
@@ -160,11 +160,11 @@ class Session:
     def is_connected(self) -> bool:
         return self.state != self.STATE_DISCONNECTING and self.state != self.STATE_DISCONNECTED
 
-    def update(self, time):
-        if not self.is_active and self.last_update + 10 < time:
+    def update(self, time: float):
+        if not self.is_active and (self.last_update + 10) < time:
             self.disconnect("timeout")
             return
-        if self.state == self.STATE_DISCONNECTING and (len(self.__send_queue.packets) == 0) and (len(self.ack_queue) == 0) and (len(self.nack_queue) == 0) and (len(self.packet_to_send) == 0) and (len(self.recovery_queue) == 0) or self.disconnection_time + 10 < time:
+        if self.state == self.STATE_DISCONNECTING and (len(self.__send_queue.packets) == 0) and (len(self.ack_queue) == 0) and (len(self.nack_queue) == 0) and len(self.packet_to_send == 0) and len(self.recovery_queue) == 0 or (self.disconnection_time + 10) < time:
             self.close()
             return
 
@@ -450,51 +450,26 @@ class Session:
             if packet.seq_number < self.window_start or packet.seq_number > self.window_end or packet.seq_number in self.ack_queue:
                 # TODO: DEBUG RECEIVE DUPLICATE OR OUT OF WINDOW
                 return
-            if is_in_list(packet.seq_number, self.nack_queue):
+            if packet.seq_number in self.nack_queue:
                 self.nack_queue.remove(packet.seq_number)
             self.ack_queue.insert(packet.seq_number, packet.seq_number)
             if self.highest_seq_number_this_tick < packet.seq_number:
                 self.highest_seq_number_this_tick = packet.seq_number
             if packet.seq_number == self.window_start:
-                for window in self.ack_queue:
-                    if self.window_start in self.ack_queue:
-                        self.window_end += 1
+                while self.window_start in self.ack_queue:
+                    self.window_end += 1
+                    self.window_start += 1
             elif packet.seq_number > self.window_start:
-                i = self.window_start
-                while i < packet.seq_number:
-                    if i not in self.ack_queue:
-                        self.nack_queue.insert(i, i)
-                    i += 1
+                while self.window_start < packet.seq_number:
+                    if self.window_start not in self.ack_queue:
+                        self.nack_queue.insert(self.window_start, self.window_start)
+                    self.window_start += 1
             else:
                 assert False, "received packet before window start"
             for pk in packet.packets:
                 assert isinstance(pk, EncapsulatedPacket)
                 self.handle_encapsulated_packet(pk)
         else:
-            if 0x00 < packet.buffer[0] < 0x80:
-                packet.decode()
-                if isinstance(packet, UnconnectedPing):
-                    pk = UnconnectedPong()
-                    pk.server_id = self.session_manager.get_id()
-                    pk.ping_id = packet.ping_id
-                    pk.server_name = self.session_manager.get_name()
-                    self.send_packet(pk)
-                elif isinstance(packet, OpenConnectionRequest1):
-                    # packet.protocol TODO: check protocol number and refuse connections
-                    pk = OpenConnectionReply1()
-                    pk.mtu_size = packet.mtu_size
-                    pk.server_id = self.session_manager.get_id()
-                    self.send_packet(pk)
-                    self.state = self.STATE_CONNECTING
-                elif self.state == self.STATE_CONNECTING and isinstance(packet, OpenConnectionRequest2):
-                    if packet.get_address().get_port() == self.session_manager.get_port() or not self.session_manager.port_checking:
-                        self.mtu_size = min(abs(packet.mtu_size), 1464)  # Max size, do not allow creating large buffers to fill server memory
-                        pk = OpenConnectionReply2()
-                        pk.mtu_size = self.mtu_size
-                        pk.server_id = self.session_manager.get_id()
-                        pk.client_address = self.address
-                        self.send_packet(pk)
-                        self.state = self.STATE_CONNECTING
             if isinstance(packet, ACK):
                 packet.decode()
                 for seq in packet.packets:
@@ -517,4 +492,4 @@ class Session:
         if self.state != self.STATE_DISCONNECTED:
             self.state = self.STATE_DISCONNECTED
             self._queue_connected_packet(DisconnectNotification(), PacketReliability.RELIABLE_ORDERED, 0, PyRakLib.PRIORITY_IMMEDIATE)
-        self.session_manager.remove_session_internal(self)
+            self.session_manager.remove_session_internal(self)
