@@ -17,14 +17,8 @@ from pocketfurnace.raknet.protocol.EncapsulatedPacket import EncapsulatedPacket
 from pocketfurnace.raknet.protocol.MessageIdentifiers import MessageIdentifiers
 from pocketfurnace.raknet.protocol.NACK import NACK
 from pocketfurnace.raknet.protocol.NewIncomingConnection import NewIncomingConnection
-from pocketfurnace.raknet.protocol.OpenConnectionReply1 import OpenConnectionReply1
-from pocketfurnace.raknet.protocol.OpenConnectionReply2 import OpenConnectionReply2
-from pocketfurnace.raknet.protocol.OpenConnectionRequest1 import OpenConnectionRequest1
-from pocketfurnace.raknet.protocol.OpenConnectionRequest2 import OpenConnectionRequest2
 from pocketfurnace.raknet.protocol.Packet import Packet
 from pocketfurnace.raknet.protocol.PacketReliability import PacketReliability
-from pocketfurnace.raknet.protocol.UnconnectedPing import UnconnectedPing
-from pocketfurnace.raknet.protocol.UnconnectedPong import UnconnectedPong
 from pocketfurnace.raknet.server import SessionManager
 from pocketfurnace.raknet.utils.InternetAddress import InternetAddress
 

@@ -1,17 +1,22 @@
+import logging
+
+
 class ReaderTracker:
-    maxDepth = None
-    currentDepth = 0
+    max_depth = None
+    current_depth = 0
+    logger = None
 
-    def __init__(self, maxDepth: int):
-        self.maxDepth = maxDepth
+    def __init__(self, max_depth: int):
+        self.max_depth = max_depth
+        self.logger = logging.getLogger("PocketFurnace")
 
-    def protectDepth(self, execute):
-        self.currentDepth += 1
-        if 0 < self.maxDepth < self.currentDepth:
-            print("[PocketFurnace]: Nesting level too deep: reached max depth of "+str(self.maxDepth)+" tags")
+    def protect_depth(self, execute):
+        self.current_depth += 1
+        if 0 < self.max_depth < self.current_depth:
+            logging.error(f"Nesting level too deep: reached max depth of {self.max_depth} tags")
+            raise ValueError
 
         try:
             execute()
         finally:
-            self.currentDepth -= 1
-
+            self.current_depth -= 1
