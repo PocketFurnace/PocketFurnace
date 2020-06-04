@@ -4,25 +4,21 @@ from pocketfurnace.nbt.ReaderTracker import ReaderTracker
 from pocketfurnace.nbt.tag.NamedTag import NamedTag
 
 
-class ByteTag(NamedTag):
+class DoubleTag(NamedTag):
+    value = 0.0
 
-    value = 0
-
-    def __init__(self, name: str = "", value: int = 0):
+    def __init__(self, name: str = "", value: float = 0.0):
         super().__init__(name)
-        if value < -128 or value > 127:
-            print("Value "+str(value)+" is too large!")
         self.value = value
 
     def get_type(self) -> int:
-        return NBT.TAG_Byte
+        return NBT.TAG_Double
 
     def read(self, nbt: NBTStream, tracker: ReaderTracker):
-        self.value = nbt.get_signed_byte()
+        self.value = nbt.get_double()
 
     def write(self, nbt: NBTStream):
-        nbt.put_byte(self.value)
+        nbt.put_double(self.value)
 
-    def get_value(self) -> int:
+    def get_value(self) -> float:
         return self.value
-

@@ -43,9 +43,10 @@ class CompoundTag(NamedTag):
     # already exists at the offset and the types do not match, an exception will be thrown unless $force is true.
     def set_tag(self, tag: NamedTag, force: bool = False):
         if not force:
-            existing = None
             if tag.name in self.value:
                 existing = self.value[tag.name]
+            else:
+                existing = None
             if existing is not None and not isinstance(tag, existing):
                 print("Cannot set tag at " + tag.name)
         else:
@@ -59,10 +60,25 @@ class CompoundTag(NamedTag):
 
     # Returns whether the CompoundTag contains a child tag with the specified name
     def has_tag(self, name: str) -> bool:
-        if name in self.value:
+        if name in self.value and isinstance(name, NamedTag.__class__):
             return True
         else:
             return False
+
+    # Returns the value of the child tag with the specified name, or $default if the tag doesn't exist. If the child
+    # tag is not of type $expectedType, an exception will be thrown, unless a default is given and $badTagDefault is
+    # true
+    def get_tag_value(self, name: str, expectedClass: str, default=None, badTagDefault: bool = False):
+        if badTagDefault:
+            tag = self.get_tag(name, NamedTag.__class__)
+        else:
+            tag = self.get_tag(name, expectedClass)
+        if isinstance(tag, expectedClass):
+            return tag.get_value()
+
+        if default is None:
+            print("")
+        return default
 
 
 
