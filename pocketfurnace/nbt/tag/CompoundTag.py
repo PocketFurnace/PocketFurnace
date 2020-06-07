@@ -1,5 +1,4 @@
 import copy
-from typing import Dict, AnyStr
 
 from pocketfurnace.nbt.NBT import NBT
 from pocketfurnace.nbt.NBTStream import NBTStream
@@ -19,10 +18,11 @@ from pocketfurnace.nbt.tag.StringTag import StringTag
 
 class CompoundTag(NamedTag):
 
-    value: Dict[AnyStr, NamedTag] = {}
+    value = {}
 
     def __init__(self, name: str = "", value: dict = None):
         super().__init__(name)
+        self.value = value
         for tag in value:
             self.set_tag(tag)
 
@@ -202,20 +202,8 @@ class CompoundTag(NamedTag):
         for(key, tag) in enumerate(self.value):
             self.value[key] = tag.safe_clone()
 
-    def next_(self):
-        next(self.value)
-
-    def valid(self) -> bool:
-        # TODO: This function will be a headache
-        pass
-
-    def key(self) -> str:
-        # TODO: This function will be a headache
-        pass
-
-    def current(self):
-        # TODO: This function will be a headache
-        pass
+    def next(self):
+        self.__next__()
 
     def equals_value(self, that) -> bool:
         if not (isinstance(that, self.__class__) or self.count() != that.count()):
@@ -232,3 +220,17 @@ class CompoundTag(NamedTag):
         for named_tag in other:
             new.set_tag(copy.copy(named_tag))
         return new
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        iter_ = iter(self.value)
+        next(iter_)
+
+    def __reverse__(self):
+        return sorted(self.value, reverse=True)
+
+    def __repr__(self):
+        str_dat = ', '.join([c.__repr__() for name, c in self.value.items()])
+        return f'CompundTag: {self.value} size {str(len(self.value))} = {{{str_dat}}}]'
