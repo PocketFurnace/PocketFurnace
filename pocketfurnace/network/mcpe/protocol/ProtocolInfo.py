@@ -1,8 +1,8 @@
 class ProtocolInfo:
     # Version info
-    MCBE_PROTOCOL_VERSION = 407
-    MCBE_VERSION = 'v1.16.0'
-    MCBE_VERSION_NETWORK = '1.16.0'
+    MCBE_PROTOCOL_VERSION = 448
+    MCBE_VERSION = 'v1.17.10'
+    MCBE_VERSION_NETWORK = '1.17.10'
 
     # MCBE protocol info
     BATCH_PACKET = 0xfe
